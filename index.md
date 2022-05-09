@@ -1,6 +1,10 @@
 ## ZooxantelaPy
 
-A Python library for Ocean Bottom Seismometers data analysis
+<p align="center">
+  <img src="zooxantela_toolkit_logo.png">
+</p>
+
+This project is dedicated to provide a Python framework for analysing seismological data from ocean-bottom seismometer (OBS) based on [ObsPy](https://github.com/obspy/obspy/wiki).
 
 
 ### What is ZooxantelaPy ?
@@ -29,5 +33,6 @@ A miniSEED reader is necessary to reconstruct the time series, in this case use 
 ### ToDo list
 
 - [x] Create a webdocumentation
-- [ ] https://github.com/octo-org/octo-repo/issues/740
-- [ ] Add delight to the experience when all tasks are complete :tada:
+- [ ] ...
+- [ ] ...
+- [ ] When all tasks are complete :tada:
