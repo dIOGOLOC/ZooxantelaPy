@@ -1,1 +1,4 @@
 theme: jekyll-theme-leap-day
+
+title: ZooxantelaPy
+description: A Python library for Ocean Bottom Seismometers data analysis
