@@ -1,0 +1,6 @@
+### ToDo list
+
+- [x] Create a web-documentation
+- [ ] ...
+- [ ] ...
+- [ ] When all tasks are complete :tada:
