@@ -1,5 +1,3 @@
-## ZooxantelaPy
-
 <p align="center">
   <img src="zooxantela_toolkit_logo.png">
 </p>
@@ -13,7 +11,7 @@ ZooxantelaPy is a toolkit in [PYTHON](https://www.python.org/) for processing oc
 
 The seismic events from ocean subsurface is a key component for understanding the of the Earth's dynamic interior. It thus needs a continuous monitoring to help scientists better understand its dynamic and predict its evolution. All around the world, seismologists want to join their efforts and set up a global monitoring.
 
-Our open source package used the followed packages in his development:
+Our code used the followed libraries:
 
 - [Numpy](http://www.numpy.org/);
 - [Matplotlib](http://matplotlib.org/);
@@ -32,7 +30,7 @@ A miniSEED reader is necessary to reconstruct the time series, in this case use 
 
 ### ToDo list
 
-- [x] Create a webdocumentation
+- [x] Create a web-documentation
 - [ ] ...
 - [ ] ...
 - [ ] When all tasks are complete :tada:
