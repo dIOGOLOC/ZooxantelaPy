@@ -4,6 +4,9 @@
 
 This project is dedicated to provide a Python framework for analysing seismological data from ocean-bottom seismometer (OBS) based on [ObsPy](https://github.com/obspy/obspy/wiki).
 
+[What is ZooxantelaPy](https://diogoloc.github.io/ZooxantelaPy/what.md)
+
+
 ### ToDo list
 
 - [x] Create a web-documentation
