@@ -54,7 +54,7 @@ import os
 import json
 
 from parameters_py.config import (
-					OUTPUT_JSON_FILE_DIR,STA_CSV_FILE
+					OUTPUT_JSON_FILE_DIR,STA_CSV_FILE,LABEL_LANG
 				   )
 
 

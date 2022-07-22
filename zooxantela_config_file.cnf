@@ -39,16 +39,16 @@
 #======
 
 #choose between portuguese (br) or english (en):
-LABEL_LANG = br
+LABEL_LANG = en
 
 #======
 [paths]
 #======
 
 # directory of raw files
-#DIR_DATA = /home/diogoloc/dados_posdoc/ON_MAR/data/
+DIR_DATA = /home/diogoloc/dados_posdoc/ON_MAR/RSBR_OBS_DATA/
 #DIR_DATA = /run/user/1000/gvfs/smb-share:server=hatabackup.local,share=dados_posdoc/ON_MAR/data/
-DIR_DATA = /home/diogoloc/dados_posdoc/ON_MAR/obs_data_MSEED/
+#DIR_DATA = /home/diogoloc/dados_posdoc/ON_MAR/obs_data_MSEED/
 
 # directory of raw status files
 DIR_STATUS = /home/diogoloc/dados_posdoc/ON_MAR/obs_data/STATUS_FILE/
@@ -69,14 +69,14 @@ OUTPUT_EV_DIR = /home/diogoloc/dados_posdoc/ON_MAR/EVENTS/
 XML_FILE = /home/diogoloc/dados_posdoc/ON_MAR/XML_ON_OBS_CC/
 
 #STA CSV FILE path
-STA_CSV_FILE  = /home/diogoloc/dados_posdoc/ON_MAR/sta_coord/RSIS_ZOOXANTELA.txt
-#STA_CSV_FILE  = /home/diogoloc/dados_posdoc/ON_MAR/sta_coord/OBS_ZOOXANTELA.txt
+STA_CSV_FILE  = /home/diogoloc/dados_posdoc/ON_MAR/STA_COORD/OBS/OBS_RSBR_ZOOXANTELA.txt
+#STA_CSV_FILE  = /home/diogoloc/dados_posdoc/ON_MAR/STA_COORD/OBS/OBS_ZOOXANTELA.txt
 
 #Local events FILE path
-LOCAL_CSV_FILE  = /home/diogoloc/SIG_dados/Projeto_ON_MAR/brasil_terremoto_lista_USP/sisbra_v2022Jan27/catalogo_07_2019_to_07_2020.csv
+LOCAL_CSV_FILE  = /home/diogoloc/dados_posdoc/SIG_Dados/Projeto_ON_MAR/brasil_terremoto_lista_USP/sisbra_v2022Jan27/catalogo_07_2019_to_07_2020.csv
 
 #Shapefile  boundary states
-BOUNDARY_STATES_SHP = /home/diogoloc/SIG_dados/Projeto_ON_MAR/shapefile/brasil_estados/brasil_estados.shp
+BOUNDARY_STATES_SHP = /home/diogoloc/dados_posdoc/SIG_Dados/Projeto_ON_MAR/shapefile/brasil_estados/brasil_estados.shp
 
 #=====
 [ppsd]
@@ -133,7 +133,7 @@ LOCAL_EV_DISTANCE_MIN = 500
 
 #Shapefile to filter local event data
 #SHP_AREA_DELIMITER = /home/diogoloc/SIG_dados/Projeto_ON_MAR/shapefile/area_batimetria/area_mar.shp
-SHP_AREA_DELIMITER = /home/diogoloc/SIG_dados/Projeto_ON_MAR/shapefile/area_batimetria/area_ON_projeto.shp
+SHP_AREA_DELIMITER = /home/diogoloc/dados_posdoc/SIG_Dados/Projeto_ON_MAR/shapefile/area_batimetria/area_ON_projeto.shp
 
 #Time to trim the seismogram before P-wave arrival
 CUT_BEFORE_P_LOCAL = 10
@@ -141,10 +141,9 @@ CUT_BEFORE_P_LOCAL = 10
 #Time to trim the seismogram after P-wave arrival
 CUT_AFTER_P_LOCAL = 200
 
-#Choose an available host and port to download data (https://docs.obspy.org/packages/obspy.clients.arclink.html):
-USER = locdiogo@gmail.com
-HOST = rsis1.on.br
-PORT = 18001
+#Choose an available host and port to download data (https://docs.obspy.org/packages/obspy.clients.fdsn.html):
+BASE_URL_or_KEY = IRIS
+
 
 #======
 [event]

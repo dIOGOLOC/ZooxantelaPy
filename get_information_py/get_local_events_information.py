@@ -83,7 +83,7 @@ from shapely.geometry import Point, shape
 
 
 from parameters_py.config import (
-                                OUTPUT_JSON_FILE_DIR,LOCAL_CSV_FILE,SHP_AREA_DELIMITER,
+                                OUTPUT_JSON_FILE_DIR,LOCAL_CSV_FILE,SHP_AREA_DELIMITER,LABEL_LANG,
                                 LOCAL_EVENT_START_DATE,LOCAL_EVENT_FINAL_DATE,LOCAL_EV_MAGNITUDE_MIN
                                 )
 

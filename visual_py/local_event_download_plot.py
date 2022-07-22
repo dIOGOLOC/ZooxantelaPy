@@ -49,11 +49,11 @@ from obspy.taup import TauPyModel
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 from obspy.io.sac.sactrace import SACTrace
-from obspy.clients.arclink.client import Client
+from obspy.clients.fdsn.client import Client
 
 
 from parameters_py.config import (
-					TAUPY_MODEL,USER,HOST,PORT,
+					TAUPY_MODEL,BASE_URL_or_KEY,LABEL_LANG,
 					CUT_BEFORE_P_LOCAL,CUT_AFTER_P_LOCAL,
 					DIR_DATA,OUTPUT_EV_DIR,OUTPUT_FIGURE_DIR
 							   )
@@ -61,7 +61,8 @@ from parameters_py.config import (
 #Function to cut and plot event:
 
 def cut_download_data_by_event(knetwk,kstnm,stla,stlo,evla,evlo,evdp,evmag,ev_timeUTC):
-	client = Client(user=USER,host=HOST, port=PORT)
+	client = Client(BASE_URL_or_KEY)
+
 	#Calculating distance, azimuth and backazimuth
 	dist,az,baz = op.geodetics.gps2dist_azimuth(evla,evlo,stla,stlo)
 	gcarc = op.geodetics.kilometer2degrees(dist/1000)
@@ -79,12 +80,12 @@ def cut_download_data_by_event(knetwk,kstnm,stla,stlo,evla,evlo,evdp,evmag,ev_ti
 	#STREAM
 
 	#Creating Event Directory
-
 	try:
 
 		#-----------------------------------
 		#Component E
 		stE = client.get_waveforms(knetwk,kstnm,' ','HHE',starttime,endtime)
+
 		headerHHX = {
 					'kstnm': kstnm, 'kcmpnm': 'HHE','knetwk':knetwk,
 					'stla': float(stla), 'stlo': float(stlo),
@@ -111,7 +112,6 @@ def cut_download_data_by_event(knetwk,kstnm,stla,stlo,evla,evlo,evdp,evmag,ev_ti
 		#Component N
 
 		stN = client.get_waveforms(knetwk,kstnm,' ','HHN',starttime,endtime)
-
 		headerHHY = {
 					'kstnm': kstnm, 'kcmpnm': 'HHN','knetwk':knetwk,
 					'stla': float(stla), 'stlo': float(stlo),
@@ -127,6 +127,7 @@ def cut_download_data_by_event(knetwk,kstnm,stla,stlo,evla,evlo,evdp,evmag,ev_ti
 
 		#-----------------------------------
 		#Component Z
+		
 		stZ = client.get_waveforms(knetwk,kstnm,' ','HHZ',starttime,endtime)
 
 		headerHHZ = {
@@ -142,14 +143,16 @@ def cut_download_data_by_event(knetwk,kstnm,stla,stlo,evla,evlo,evdp,evmag,ev_ti
 		sacHHZ = SACTrace(data=stZ[0].data, **headerHHZ)
 		sacHHZ.write(event_directory+'/'+knetwk+'.'+kstnm+'.'+'{:04}'.format(op.UTCDateTime(ev_timeUTC).year)+'.'+'{:03}'.format(op.UTCDateTime(ev_timeUTC).julday)+'.'+'{:02}'.format(op.UTCDateTime(ev_timeUTC).hour)+'.'+'{:02}'.format(op.UTCDateTime(ev_timeUTC).minute)+'.'+'{:02}'.format(op.UTCDateTime(ev_timeUTC).second)+'.'+'{:02}'.format(op.UTCDateTime(ev_timeUTC).microsecond)[:3]+'.Z')
 	except:
-	if LABEL_LANG == 'br':
-		print('Sem evento: '+knetwk+'.'+kstnm)
+	
+		if LABEL_LANG == 'br':
+			print('Sem evento: '+knetwk+'.'+kstnm)
 
-	else:
-		print('No event: '+knetwk+'.'+kstnm)
+		else:
+			print('No event: '+knetwk+'.'+kstnm)
 
 def cut_data_by_local_event(knetwk,kstnm,stla,stlo,evla,evlo,evdp,evmag,ev_timeUTC):
-	data_sta = DIR_DATA+knetwk+'/'+kstnm+'/'
+	data_sta = DIR_DATA+str(op.UTCDateTime(ev_timeUTC).year)+'/'+knetwk+'/'+kstnm+'/'
+
 	if os.path.isdir(data_sta) == True:
 
 		#Calculating distance, azimuth and backazimuth
@@ -182,6 +185,7 @@ def cut_data_by_local_event(knetwk,kstnm,stla,stlo,evla,evlo,evdp,evmag,ev_timeU
 
 				else:
 					print('Event Directory: ',event_directory)
+					
 				headerHHE = {
 							'kstnm': kstnm, 'kcmpnm': 'HHE','knetwk':knetwk,
 							'stla': float(stla), 'stlo': float(stlo),
@@ -232,26 +236,31 @@ def cut_data_by_local_event(knetwk,kstnm,stla,stlo,evla,evlo,evdp,evmag,ev_timeU
 				sacHHZ = SACTrace(data=stZ[0].data, **headerHHZ)
 				sacHHZ.write(event_directory+'/'+knetwk+'.'+kstnm+'.'+'{:04}'.format(op.UTCDateTime(ev_timeUTC).year)+'.'+'{:03}'.format(op.UTCDateTime(ev_timeUTC).julday)+'.'+'{:02}'.format(op.UTCDateTime(ev_timeUTC).hour)+'.'+'{:02}'.format(op.UTCDateTime(ev_timeUTC).minute)+'.'+'{:02}'.format(op.UTCDateTime(ev_timeUTC).second)+'.'+'{:02}'.format(op.UTCDateTime(ev_timeUTC).microsecond)[:3]+'.Z')
 
-				#-----------------------------------
-				#Component X
-				stX = op.read(data_sta+'HHX.D'+'/'+knetwk+'.'+kstnm+'..HHX.D.'+'{:04}'.format(op.UTCDateTime(ev_timeUTC).year)+'.'+'{:03}'.format(op.UTCDateTime(ev_timeUTC).julday))
-				stX.trim(starttime,endtime)
+				if os.path.isdir(data_sta+'HHX.D'+'/') == True:
 
-				headerHHX = {
-							'kstnm': kstnm, 'kcmpnm': 'HHX','knetwk':knetwk,
-							'stla': float(stla), 'stlo': float(stlo),
-							'evdp': float(evdp), 'evla': float(evla), 'evlo': float(evlo), 'mag': float(evmag),
-							'nzhour': int(starttime.hour),'nzjday': int(starttime.julday), 'nzmin': int(starttime.minute), 'nzmsec': int('{:03}'.format(starttime.microsecond)[:3]),'nzsec': int(starttime.second),'nzyear': int(starttime.year),
-							'dist': float(dist/1000), 'gcarc': float(gcarc), 'az': float(az), 'baz': float(baz),
-							'o':float(CUT_BEFORE_P_LOCAL),
-							'delta':stX[0].stats.delta
-							}
+					#-----------------------------------
+					#Component X
+					stX = op.read(data_sta+'HHX.D'+'/'+knetwk+'.'+kstnm+'..HHX.D.'+'{:04}'.format(op.UTCDateTime(ev_timeUTC).year)+'.'+'{:03}'.format(op.UTCDateTime(ev_timeUTC).julday))
+					stX.trim(starttime,endtime)
 
-				sacHHX = SACTrace(data=stX[0].data, **headerHHX)
-				sacHHX.write(event_directory+'/'+knetwk+'.'+kstnm+'.'+'{:04}'.format(op.UTCDateTime(ev_timeUTC).year)+'.'+'{:03}'.format(op.UTCDateTime(ev_timeUTC).julday)+'.'+'{:02}'.format(op.UTCDateTime(ev_timeUTC).hour)+'.'+'{:02}'.format(op.UTCDateTime(ev_timeUTC).minute)+'.'+'{:02}'.format(op.UTCDateTime(ev_timeUTC).second)+'.'+'{:02}'.format(op.UTCDateTime(ev_timeUTC).microsecond)[:3]+'.X')
+					headerHHX = {
+								'kstnm': kstnm, 'kcmpnm': 'HHX','knetwk':knetwk,
+								'stla': float(stla), 'stlo': float(stlo),
+								'evdp': float(evdp), 'evla': float(evla), 'evlo': float(evlo), 'mag': float(evmag),
+								'nzhour': int(starttime.hour),'nzjday': int(starttime.julday), 'nzmin': int(starttime.minute), 'nzmsec': int('{:03}'.format(starttime.microsecond)[:3]),'nzsec': int(starttime.second),'nzyear': int(starttime.year),
+								'dist': float(dist/1000), 'gcarc': float(gcarc), 'az': float(az), 'baz': float(baz),
+								'o':float(CUT_BEFORE_P_LOCAL),
+								'delta':stX[0].stats.delta
+								}
+
+					sacHHX = SACTrace(data=stX[0].data, **headerHHX)
+					sacHHX.write(event_directory+'/'+knetwk+'.'+kstnm+'.'+'{:04}'.format(op.UTCDateTime(ev_timeUTC).year)+'.'+'{:03}'.format(op.UTCDateTime(ev_timeUTC).julday)+'.'+'{:02}'.format(op.UTCDateTime(ev_timeUTC).hour)+'.'+'{:02}'.format(op.UTCDateTime(ev_timeUTC).minute)+'.'+'{:02}'.format(op.UTCDateTime(ev_timeUTC).second)+'.'+'{:02}'.format(op.UTCDateTime(ev_timeUTC).microsecond)[:3]+'.X')
+				else: 
+					pass
+
 		except:
-				if LABEL_LANG == 'br':
-					print('Sem evento: '+knetwk+'.'+kstnm)
+			if LABEL_LANG == 'br':
+				print('Sem evento: '+knetwk+'.'+kstnm)
 
-				else:
-					print('No event: '+knetwk+'.'+kstnm)
+			else:
+				print('No event: '+knetwk+'.'+kstnm)

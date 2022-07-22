@@ -176,10 +176,9 @@ CUT_BEFORE_P_LOCAL = config.getfloat('local_evt', 'CUT_BEFORE_P_LOCAL')
 #Time to trim the seismogram after P-wave arrival
 CUT_AFTER_P_LOCAL = config.getfloat('local_evt', 'CUT_AFTER_P_LOCAL')
 
-#Choose an available host and port to download data (https://docs.obspy.org/packages/obspy.clients.arclink.html):
-USER = config.get('local_evt', 'USER')
-HOST = config.get('local_evt', 'HOST')
-PORT = config.get('local_evt', 'PORT')
+#Choose an available BASE_URL or KEY to download data (https://docs.obspy.org/packages/obspy.clients.fdsn.html):
+BASE_URL_or_KEY = config.get('local_evt', 'BASE_URL_or_KEY')
+
 
 # ------
 # event

@@ -64,15 +64,13 @@ from pyasdf import ASDFDataSet
 
 # Folders input
 
-MSEED_DIR_OBS = '/media/diogoloc/Backup/dados_posdoc/ON_MAR/obs_data_MSEED/'
-
-MSEED_DIR_STA = '/media/diogoloc/Backup/dados_posdoc/ON_MAR/data/'
+MSEED_DIR_OBS_STA = '/home/diogoloc/dados_posdoc/ON_MAR/RSBR_OBS_DATA/'
 
 # -------------------------------
 
 # Shapefile  boundary states input
 
-BOUNDARY_STATES_SHP = '/media/diogoloc/Backup/dados_posdoc/SIG_dados/Projeto_ON_MAR/shapefile/brasil_estados/UFEBRASIL.shp'
+BOUNDARY_STATES_SHP = '/home/diogoloc/dados_posdoc/SIG_Dados/Projeto_ON_MAR/shapefile/brasil_estados/brasil_estados.shp'
 
 # -------------------------------
 
@@ -83,7 +81,7 @@ OBS_LST = ['OBS17','OBS18','OBS20','OBS22']
 STATIONS_LST = ['ABR01','DUB01','MAN01','OBS20','OBS22','TER01','ALF01','GDU01','NAN01','TIJ01','CAJ01','GUA01','OBS17','PET01','TRI01','CAM01','JAC01','OBS18','RIB01','VAS01','CMC01','MAJ01','SLP01','PARB','CNLB','BSFB']
 STATIONS_LST = sorted(STATIONS_LST)
 
-STATIONXML_DIR = '/media/diogoloc/Backup/dados_posdoc/ON_MAR/XML_ON_OBS_CC/'
+STATIONXML_DIR = '/home/diogoloc/dados_posdoc/ON_MAR/XML_ON_OBS_CC/'
 
 CHANNEL_LST = ['HHZ.D','HHN.D','HHE.D','HH1.D','HH2.D']
 
@@ -91,11 +89,11 @@ CHANNEL_LST = ['HHZ.D','HHN.D','HHE.D','HH1.D','HH2.D']
 
 # Folders output
 
-ORIENTATION_OUTPUT = '/media/diogoloc/Backup/dados_posdoc/ON_MAR/ORIENTATION_OUTPUT/FIGURAS/'
+ORIENTATION_OUTPUT = '/home/diogoloc/dados_posdoc/ON_MAR/ORIENTATION_OUTPUT/FIGURAS/'
 
-ASDF_FILES = '/media/diogoloc/Backup/dados_posdoc/ON_MAR/CLOCK_DRIFT_OUTPUT/ASDF_FILES/'
+ASDF_FILES = '/home/diogoloc/dados_posdoc/ON_MAR/ORIENTATION_OUTPUT/ASDF_FILES/'
 
-FEATHER_FILES = '/media/diogoloc/Backup/dados_posdoc/ON_MAR/CLOCK_DRIFT_OUTPUT/FEATHER_FILES/'
+FEATHER_FILES = '/home/diogoloc/dados_posdoc/ON_MAR/ORIENTATION_OUTPUT/FEATHER_FILES/'
 
 # -------------------------------
 #create figures?
@@ -103,21 +101,20 @@ VERBOSE = False
 
 # Input parameters
 
-FIRSTDAY = '2019-08-01'
+FIRSTDAY = '2019-07-01'
 LASTDAY = '2020-06-01'
 
-#Each hour-long seismogram is amplitude clipped at twice its standard deviation of that hour-long time window.
+#Each 2 hours-long seismogram is amplitude clipped at twice its standard deviation of that 2 hours-long time window.
 CLIP_FACTOR = 2
 
-MIN_WINDOWS = 30
+MIN_WINDOWS = 6
 
-WINDOW_LENGTH = 3600
+WINDOW_LENGTH = 7200
 
 #max time window (s) for cross-correlation
-SHIFT_LEN = 1800
+SHIFT_LEN = 3600
 
-PERIOD_BANDS = [[7, 25], [20, 50], [50, 100]]
-# (these bands focus on periods 7, 20 and 70 seconds)
+PERIOD_BANDS = [[5,10],[10,20],[20,50],[50,100]]
 PERIOD_BANDS2 = [[20, 50]]
 
 # default parameters to define the signal and noise windows used to
@@ -132,10 +129,10 @@ SIGNAL2NOISE_TRAIL = 700.0
 NOISE_WINDOW_SIZE = 700.0
 
 #Returns pairs and spectral SNR array whose spectral SNRs are all >= minspectSNR
-minspectSNR = 1
+minspectSNR = 4
 
 #RESAMPLING
-NEW_SAMPLING_RATE = 20
+NEW_SAMPLING_RATE = 2
 
 # -------------------------------
 
@@ -319,7 +316,7 @@ def get_stations_data(f,Amp_clip=False,onebit_norm=False,white_spectral=True):
             st_endtime = st[0].stats.endtime
 
             if len(st[0].data) > WINDOW_LENGTH*100:
-        	    st_traces = [k for k in st.slide(window_length=WINDOW_LENGTH, step=WINDOW_LENGTH/2)]
+        	    st_traces = [k for k in st.slide(window_length=WINDOW_LENGTH, step=WINDOW_LENGTH)]
 
         	    st_traces_check = []
         	    st_hours = []
@@ -2197,16 +2194,14 @@ class CrossCorrelation:
 # ============
 # Main program
 # ============
-'''
+
 print('===============================')
 print('Scanning name of miniseed files')
 print('===============================')
 print('\n')
 start_time = time.time()
 
-files_STA = filelist(basedir=MSEED_DIR_STA,interval_period_date=INTERVAL_PERIOD_DATE)
-files_OBS = filelist(basedir=MSEED_DIR_OBS,interval_period_date=INTERVAL_PERIOD_DATE)
-files1 = files_STA+files_OBS
+files1 = filelist(basedir=MSEED_DIR_OBS_STA,interval_period_date=INTERVAL_PERIOD_DATE)
 
 files_final_1 = []
 for i in files1:
@@ -2436,7 +2431,6 @@ start_time = time.time()
 plot_stacked_cc_interstation_distance_per_obs_short('CROSS_CORR_10_DAYS_STACKED_FILES')
 print("--- %.2f execution time (min) ---" % ((time.time() - start_time)/60))
 
-'''
 print('\n')
 print('============================')
 print('Calculating the orientation:')

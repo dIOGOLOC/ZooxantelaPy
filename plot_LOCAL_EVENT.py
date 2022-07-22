@@ -47,7 +47,7 @@ import matplotlib.pyplot as plt
 from visual_py.event_plot import plot_event_data,plot_map_event_data,plot_map_event_data_hydrophone
 
 from parameters_py.config import (
-					OUTPUT_FIGURE_DIR,DIR_DATA,OUTPUT_EV_DIR,DIR_STATUS,NUM_PROCESS,OUTPUT_PSD_DIR,XML_FILE
+					OUTPUT_FIGURE_DIR,DIR_DATA,OUTPUT_EV_DIR,DIR_STATUS,NUM_PROCESS,OUTPUT_PSD_DIR,XML_FILE,LABEL_LANG
 					)
 
 # =====================

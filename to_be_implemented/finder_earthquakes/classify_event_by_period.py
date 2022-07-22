@@ -55,7 +55,6 @@ import cartopy.crs as ccrs
 from cartopy.io.shapereader import Reader
 import cartopy.feature as cfeature
 
-from pyasdf import ASDFDataSet
 
 from obspy.signal.trigger import classic_sta_lta, trigger_onset, coincidence_trigger,recursive_sta_lta,plot_trigger
 
@@ -106,8 +105,8 @@ ONEDAY = datetime.timedelta(days=1)
 # Filtering by date
 # =================
 
-FIRSTDAY = '2020,03,25,00'
-LASTDAY = '2020,03,26,00'
+FIRSTDAY = '2019,12,07,00'
+LASTDAY = '2019,12,08,00'
 
 fday = UTCDateTime(FIRSTDAY)
 lday = UTCDateTime(LASTDAY)
@@ -132,18 +131,21 @@ print('\n')
 xml_files = sorted(glob.glob(STATIONXML_DIR+'ON.OBS*'))
 inv = read_inventory(xml_files[0])
 for xml_file in xml_files[1:]:
-    inv.extend(read_inventory(xml_file))
+	inv.extend(read_inventory(xml_file))
+	print(xml_file)
 
 #----------------------------------------------------------------------------
 
 for iperid,period_date in enumerate(tqdm(INTERVAL_PERIOD_DATE,desc='File loop')):
-    obs_day_files = glob.glob(MSEED_FOLDER+'**/**/**/*'+str(period_date))
+    obs_day_files = glob.glob(MSEED_FOLDER+'**/**/**/**/*'+str(period_date))
+
+    print(period_date)
 
     st = Stream()
     for file in obs_day_files:
         #if 'HHX' not in file and 'OBS19' not in file and 'OBS22' not in file and 'OBS20' not in file:
-        #if 'HHX' not in file and 'OBS19' not in file:
-        if 'HHX' in file:
+        if 'HHX' not in file and 'OBS19' not in file:
+        #if 'HHX' in file:
             st.append(read(file)[0])
 
     st.trim(starttime=INTERVAL_PERIOD[iperid], endtime=INTERVAL_PERIOD[iperid]+HOUR12)

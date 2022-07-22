@@ -52,7 +52,6 @@ from obspy.signal.trigger import classic_sta_lta, trigger_onset, coincidence_tri
 
 import numpy as np
 import pandas as pd
-import geopandas as geopd
 import matplotlib.dates as mdates
 import matplotlib.gridspec as gridspec
 from matplotlib.transforms import offset_copy
@@ -65,7 +64,7 @@ from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter,LatitudeLoc
 
 from parameters_py.config import (
 					DIR_DATA,TAUPY_MODEL,EV_GCARC_MIN,EV_GCARC_MAX,CUT_BEFORE_P,CUT_AFTER_P,XML_FILE,
-					OUTPUT_EV_DIR,OUTPUT_FIGURE_DIR,BOUNDARY_STATES_SHP,LOCAL_EV_DISTANCE_MIN
+					OUTPUT_EV_DIR,OUTPUT_FIGURE_DIR,BOUNDARY_STATES_SHP,LOCAL_EV_DISTANCE_MIN,LABEL_LANG
 							   )
 # ===============================
 # Function to cut and plot event:
