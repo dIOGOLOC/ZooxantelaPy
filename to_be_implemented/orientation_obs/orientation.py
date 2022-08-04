@@ -89,11 +89,7 @@ CHANNEL_LST = ['HHZ.D','HHN.D','HHE.D','HH1.D','HH2.D']
 
 # Folders output
 
-ORIENTATION_OUTPUT = '/home/diogoloc/dados_posdoc/ON_MAR/ORIENTATION_OUTPUT/FIGURAS/'
-
-ASDF_FILES = '/home/diogoloc/dados_posdoc/ON_MAR/ORIENTATION_OUTPUT/ASDF_FILES/'
-
-FEATHER_FILES = '/home/diogoloc/dados_posdoc/ON_MAR/ORIENTATION_OUTPUT/FEATHER_FILES/'
+ORIENTATION_OUTPUT = '/home/diogoloc/dados_posdoc/ON_MAR/ORIENTATION_OUTPUT/'
 
 # -------------------------------
 #create figures?
@@ -124,7 +120,7 @@ PERIOD_BANDS2 = [[20, 50]]
 # - the noise window has a fixed size and starts after a fixed trailing
 #   time from the end of the signal window
 SIGNAL_WINDOW_VMIN = 2.0
-SIGNAL_WINDOW_VMAX = 4.0
+SIGNAL_WINDOW_VMAX = 5.0
 SIGNAL2NOISE_TRAIL = 700.0
 NOISE_WINDOW_SIZE = 700.0
 
@@ -132,7 +128,7 @@ NOISE_WINDOW_SIZE = 700.0
 minspectSNR = 4
 
 #RESAMPLING
-NEW_SAMPLING_RATE = 2
+NEW_SAMPLING_RATE = 1
 
 # -------------------------------
 
@@ -146,7 +142,7 @@ TENDAY = datetime.timedelta(days=10)
 
 # MULTIPROCESSING
 
-num_processes = 8
+num_processes = 4
 
 # =================
 # Filtering by date
@@ -227,7 +223,7 @@ def obscorr_window(data1,time_data1,data2,time_data2,dist,vmin,vmax):
 
 #-------------------------------------------------------------------------------
 
-# Calculating Cross-Correlation between two traces
+# Calculating Cross-Correlation SRN between two traces
 def SNR(data,time_data,dist,vmin=SIGNAL_WINDOW_VMIN,vmax=SIGNAL_WINDOW_VMAX,signal2noise_trail=SIGNAL2NOISE_TRAIL,noise_window_size=NOISE_WINDOW_SIZE):
 	"""
     The signal window is defined by *vmin* and *vmax*:
@@ -276,7 +272,7 @@ def Normalize(data):
 
 #-------------------------------------------------------------------------------
 
-def get_stations_data(f,Amp_clip=False,onebit_norm=False,white_spectral=True):
+def get_stations_data(f,Amp_clip=True,onebit_norm=True,white_spectral=True):
     """
     Gets stations daily data from miniseed file
 
@@ -303,117 +299,116 @@ def get_stations_data(f,Amp_clip=False,onebit_norm=False,white_spectral=True):
     elif sta_channel == 'HHE' or sta_channel == 'HH2':
         sta_channel = 'HHE'
 
-    output_DATA_DAY = ASDF_FILES+'DATA_DAY_FILES/'+year_day+'.'+julday_day+'/'
+    output_DATA_DAY = ORIENTATION_OUTPUT+'ASDF_FILES/DATA_DAY_FILES/'+year_day+'.'+julday_day+'/'
 
     if os.path.isfile(output_DATA_DAY+'DATA_DAY_'+network+'_'+name+'_'+sta_channel+'_'+year_day+'_'+julday_day+'.h5'):
         pass
 
     else:
 
-        try:
+        #try:
             st = read(f)
             st_starttime = st[0].stats.starttime
             st_endtime = st[0].stats.endtime
 
             if len(st[0].data) > WINDOW_LENGTH*100:
-        	    st_traces = [k for k in st.slide(window_length=WINDOW_LENGTH, step=WINDOW_LENGTH)]
+                st_traces = [k for k in st.slide(window_length=WINDOW_LENGTH, step=WINDOW_LENGTH)]
+                st_traces_check = []
+                st_hours = []
+                for k in st_traces:
+                    if len(k[0].data) >= WINDOW_LENGTH*100:
+                        k[0].data = k[0].data[:WINDOW_LENGTH*100]
+                        st_traces_check.append(k)
+                        st_hours.append(str(k[0].stats.starttime.hour)+':'+str(k[0].stats.starttime.minute))
+                    else:
+                        pass
 
-        	    st_traces_check = []
-        	    st_hours = []
-        	    for k in st_traces:
-        	    	if len(k[0].data) >= WINDOW_LENGTH*100:
-        	    		k[0].data = k[0].data[:WINDOW_LENGTH*100]
-        	    		st_traces_check.append(k)
-        	    		st_hours.append(str(k[0].stats.starttime.hour)+':'+str(k[0].stats.starttime.minute))
-        	    	else:
-        	    		pass
+                if len(st_hours) > MIN_WINDOWS:
+                    inv = read_inventory(STATIONXML_DIR+'.'.join([network,name,'xml']))
+                    coordinates_lst = inv[0][0]
 
-        	    if len(st_hours) > MIN_WINDOWS:
-        		    inv = read_inventory(STATIONXML_DIR+'.'.join([network,name,'xml']))
-        		    coordinates_lst = inv[0][0]
-
-        		    traces_resp = [tr.remove_response(inventory=inv,output="DISP",water_level=60) for tr in st_traces_check]
-        		    traces_demean = [tr.detrend('demean') for tr in traces_resp]
-        		    traces_detrend = [tr.detrend('linear') for tr in traces_demean]
-        		    traces_filter = [tr.filter('bandpass', freqmin=0.01,freqmax=10,corners=2, zerophase=True) for tr in traces_detrend]
-        		    traces_resample = [tr.resample(NEW_SAMPLING_RATE) for tr in traces_filter]
+                    traces_resp = [tr.remove_response(inventory=inv,output="DISP",water_level=60) for tr in st_traces_check]
+                    traces_demean = [tr.detrend('demean') for tr in traces_resp]
+                    traces_detrend = [tr.detrend('linear') for tr in traces_demean]
+                    traces_filter = [tr.filter('bandpass', freqmin=0.05,freqmax=0.1,corners=2, zerophase=True) for tr in traces_detrend]
+                    traces_resample = [tr.resample(NEW_SAMPLING_RATE) for tr in traces_filter]
 
         		    # ===================
         		    # Amplitude  clipping
         		    # ===================
 
-        		    if Amp_clip:
-        			    for i,tr in enumerate(traces_resample):
-        			    	lim = CLIP_FACTOR * np.std(tr[0].data)
-        			    	tr[0].data[tr[0].data > lim] = lim
-        			    	tr[0].data[tr[0].data < -lim] = -lim
+                    if Amp_clip:
+                        for i,tr in enumerate(traces_resample):
+                            lim = CLIP_FACTOR * np.std(tr[0].data)
+                            tr[0].data[tr[0].data > lim] = lim
+                            tr[0].data[tr[0].data < -lim] = -lim
 
         		    # ======================
         		    # One-bit normalization
         		    # ======================
 
-        		    if onebit_norm:
-        		    	for i,tr in enumerate(traces_resample):
-        		    		tr[0].data = np.sign(tr[0].data)
+                    if onebit_norm:
+                        for i,tr in enumerate(traces_resample):
+                            tr[0].data = np.sign(tr[0].data)
 
         		    # ==================
         		    # Spectral whitening
         		    # ==================
 
-        		    if white_spectral:
-        		    	freqmin=0.05
-        		    	freqmax=0.5
-        		    	for i,tr in enumerate(traces_resample):
-        		    		n = len(tr[0].data)
-        		    		nsamp = tr[0].stats.sampling_rate
-        		    		frange = float(freqmax) - float(freqmin)
-        		    		nsmo = int(np.fix(min(0.01, 0.5 * (frange)) * float(n) / nsamp))
-        		    		f = np.arange(n) * nsamp / (n - 1.)
-        		    		JJ = ((f > float(freqmin)) & (f<float(freqmax))).nonzero()[0]
+                    if white_spectral:
+                        freqmin=0.05
+                        freqmax=0.5
+                        for i,tr in enumerate(traces_resample):
+                            n = len(tr[0].data)
+                            nsamp = tr[0].stats.sampling_rate
+                            frange = float(freqmax) - float(freqmin)
+                            nsmo = int(np.fix(min(0.01, 0.5 * (frange)) * float(n) / nsamp))
+                            f = np.arange(n) * nsamp / (n - 1.)
+                            JJ = ((f > float(freqmin)) & (f<float(freqmax))).nonzero()[0]
 
-        		    		# signal FFT
-        		    		FFTs = fft(tr[0].data)
-        		    		FFTsW = np.zeros(n) + 1j * np.zeros(n)
+                            # signal FFT
+                            FFTs = fft(tr[0].data)
+                            FFTsW = np.zeros(n) + 1j * np.zeros(n)
 
-        		    		# Apodization to the left with cos^2 (to smooth the discontinuities)
-        		    		smo1 = (np.cos(np.linspace(np.pi/2, np.pi, nsmo+1))**2)
-        		    		FFTsW[JJ[0]:JJ[0]+nsmo+1] = smo1 * np.exp(1j * np.angle(FFTs[JJ[0]:JJ[0]+nsmo+1]))
+                            # Apodization to the left with cos^2 (to smooth the discontinuities)
+                            smo1 = (np.cos(np.linspace(np.pi/2, np.pi, nsmo+1))**2)
+                            FFTsW[JJ[0]:JJ[0]+nsmo+1] = smo1 * np.exp(1j * np.angle(FFTs[JJ[0]:JJ[0]+nsmo+1]))
 
-        		    		# boxcar
-        		    		FFTsW[JJ[0]+nsmo+1:JJ[-1]-nsmo] = np.ones(len(JJ) - 2 * (nsmo+1))\
-        		    		* np.exp(1j * np.angle(FFTs[JJ[0]+nsmo+1:JJ[-1]-nsmo]))
+                            # boxcar
+                            FFTsW[JJ[0]+nsmo+1:JJ[-1]-nsmo] = np.ones(len(JJ) - 2 * (nsmo+1))\
+                            * np.exp(1j * np.angle(FFTs[JJ[0]+nsmo+1:JJ[-1]-nsmo]))
 
-        		    		# Apodization to the right with cos^2 (to smooth the discontinuities)
-        		    		smo2 = (np.cos(np.linspace(0, np.pi/2, nsmo+1))**2)
-        		    		espo = np.exp(1j * np.angle(FFTs[JJ[-1]-nsmo:JJ[-1]+1]))
-        		    		FFTsW[JJ[-1]-nsmo:JJ[-1]+1] = smo2 * espo
+                            # Apodization to the right with cos^2 (to smooth the discontinuities)
+                            smo2 = (np.cos(np.linspace(0, np.pi/2, nsmo+1))**2)
+                            espo = np.exp(1j * np.angle(FFTs[JJ[-1]-nsmo:JJ[-1]+1]))
+                            FFTsW[JJ[-1]-nsmo:JJ[-1]+1] = smo2 * espo
 
-        		    		whitedata = 2. * ifft(FFTsW).real
+                            whitedata = 2. * ifft(FFTsW).real
 
-        		    		tr[0].data = np.require(whitedata, dtype="float32")
-        		    	traces_white_spectral = traces_resample
+                            tr[0].data = np.require(whitedata, dtype="float32")
+                        traces_white_spectral = traces_resample
 
-        		    traces_data_day = np.array([ton[0].data for ton in traces_white_spectral])
+                    traces_data_day = np.array([ton[0].data for ton in traces_white_spectral])
 
-        		    os.makedirs(output_DATA_DAY,exist_ok=True)
+                    os.makedirs(output_DATA_DAY,exist_ok=True)
 
-        		    ds = ASDFDataSet(output_DATA_DAY+'DATA_DAY_'+network+'_'+name+'_'+sta_channel+'_'+year_day+'_'+julday_day+'.h5', compression="gzip-3")
+                    ds = ASDFDataSet(output_DATA_DAY+'DATA_DAY_'+network+'_'+name+'_'+sta_channel+'_'+year_day+'_'+julday_day+'.h5', compression="gzip-3")
 
                     #Adding Waveforms
-        		    ds.add_waveforms(st,tag='raw_recording')
+                    ds.add_waveforms(st,tag='raw_recording')
 
                     # Adding Auxiliary Data
-        		    # Name to identify the particular piece of data.
-        		    path_SD = sta_channel_id
+                    # Name to identify the particular piece of data.
+                    path_SD = sta_channel_id
 
-        		    # Any additional parameters as a Python dictionary which will end up as
-        		    # attributes of the array.
-        		    parameters_SD = {'SD':'Array with 1 hour slices.', 'latitude': coordinates_lst.latitude, 'longitude': coordinates_lst.longitude, 'time_day':time_day, 'hours_day': st_hours}
+                    # Any additional parameters as a Python dictionary which will end up as
+                    # attributes of the array.
+                    parameters_SD = {'SD':'Array with 1 hour slices.', 'latitude': coordinates_lst.latitude, 'longitude': coordinates_lst.longitude, 'time_day':time_day, 'hours_day': st_hours}
+                    
+                    ds.add_auxiliary_data(data=traces_data_day,data_type='StationHourData',path=path_SD, parameters=parameters_SD)
 
-        		    ds.add_auxiliary_data(data=traces_data_day,data_type='StationOneHourData',path=path_SD, parameters=parameters_SD)
-
-        except:
-            print('Problem with the file: '+f)
+        #except:
+            #print('Problem with the file: '+f)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -434,21 +429,21 @@ def crosscorr_func(stationtrace_pairs,name_suffix='CROSS_CORR_DAY_FILES'):
     sta1_asdf = ASDFDataSet(stationtrace_pairs[0],mode='r')
     sta2_asdf = ASDFDataSet(stationtrace_pairs[1],mode='r')
 
-    sta1 = sta1_asdf.auxiliary_data.StationOneHourData.list()[0]
-    sta2 = sta2_asdf.auxiliary_data.StationOneHourData.list()[0]
+    sta1 = sta1_asdf.auxiliary_data.StationHourData.list()[0]
+    sta2 = sta2_asdf.auxiliary_data.StationHourData.list()[0]
 
-    sta1_parameters = sta1_asdf.auxiliary_data.StationOneHourData[sta1].parameters
-    sta2_parameters = sta2_asdf.auxiliary_data.StationOneHourData[sta2].parameters
+    sta1_parameters = sta1_asdf.auxiliary_data.StationHourData[sta1].parameters
+    sta2_parameters = sta2_asdf.auxiliary_data.StationHourData[sta2].parameters
 
-    sta1_data_day = sta1_asdf.auxiliary_data.StationOneHourData[sta1].data[::]
-    sta2_data_day = sta2_asdf.auxiliary_data.StationOneHourData[sta2].data[::]
+    sta1_data_day = sta1_asdf.auxiliary_data.StationHourData[sta1].data[::]
+    sta2_data_day = sta2_asdf.auxiliary_data.StationHourData[sta2].data[::]
 
     year_day = sta1_parameters['time_day'].split('.')[0]
     julday_day = sta1_parameters['time_day'].split('.')[1]
 
     # ----------------------------------------------------------------------------------------------------------------------------------------------
     #Check if file exists
-    output_CrossCorrelation_DAY = ASDF_FILES+name_suffix+'/'+year_day+'.'+julday_day+'/'
+    output_CrossCorrelation_DAY = ORIENTATION_OUTPUT+'ASDF_FILES/'+name_suffix+'/'+year_day+'.'+julday_day+'/'
     if os.path.isfile(output_CrossCorrelation_DAY+name_suffix+'_'+sta1+'_'+sta2+'_'+year_day+'_'+julday_day+'.h5'):
         pass
 
@@ -468,7 +463,7 @@ def crosscorr_func(stationtrace_pairs,name_suffix='CROSS_CORR_DAY_FILES'):
 
             if raw_SNR > minspectSNR:
 
-                output_CrossCorrelation_DAY = ASDF_FILES+name_suffix+'/'+year_day+'.'+julday_day+'/'
+                output_CrossCorrelation_DAY = ORIENTATION_OUTPUT+'ASDF_FILES/'+name_suffix+'/'+year_day+'.'+julday_day+'/'
                 os.makedirs(output_CrossCorrelation_DAY,exist_ok=True)
 
                 # ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -568,7 +563,7 @@ def crosscorr_func(stationtrace_pairs,name_suffix='CROSS_CORR_DAY_FILES'):
                 ax.set_xlabel('time (s)',fontsize=14)
                 ax.set_title('Dist = '+str(round(day_crosscor_causal.dist()))+' km',fontsize=14)
 
-                output_figure_CrossCorrelation_DAY = CLOCK_DRIFT_OUTPUT+name_suffix+'_FIGURES/'+year_day+'.'+julday_day+'/'
+                output_figure_CrossCorrelation_DAY = ORIENTATION_OUTPUT+name_suffix+'_FIGURES/'+year_day+'.'+julday_day+'/'
                 os.makedirs(output_figure_CrossCorrelation_DAY,exist_ok=True)
                 fig.savefig(output_figure_CrossCorrelation_DAY+name_suffix+'_FIG_'+sta1+'_'+sta2+'_'+year_day+'_'+julday_day+'.png')
                 plt.close('all')
@@ -616,14 +611,14 @@ def crosscorr_10_days_stack_func(input_lst):
 
         # ----------------------------------------------------------------------------------------------------------------------------------------------
         #Check if file exists
-        output_CrossCorrelation_DAY = ASDF_FILES+name_suffix+'/'+year_day+'.'+julday_day+'/'
+        output_CrossCorrelation_DAY = ORIENTATION_OUTPUT+'ASDF_FILES/'+name_suffix+'/'+year_day+'.'+julday_day+'/'
 
         if os.path.isfile(output_CrossCorrelation_DAY+name_suffix+'_'+sta1+'_'+sta2+'_'+year_day+'_'+julday_day+'.h5'):
             pass
 
         else:
 
-            output_CrossCorrelation_DAY = ASDF_FILES+name_suffix+'/'+year_day+'.'+julday_day+'/'
+            output_CrossCorrelation_DAY = ORIENTATION_OUTPUT+'ASDF_FILES/'+name_suffix+'/'+year_day+'.'+julday_day+'/'
             os.makedirs(output_CrossCorrelation_DAY,exist_ok=True)
             cc_asdf = ASDFDataSet(output_CrossCorrelation_DAY+name_suffix+'_'+sta1+'_'+sta2+'_'+year_day+'_'+julday_day+'.h5', compression="gzip-3")
 
@@ -707,7 +702,7 @@ def crosscorr_stack_asdf(input):
 
     # ----------------------------------------------------------------------------------------------------------------------------------------------
 
-    output_CrossCorrelation_DAY = ASDF_FILES+cross_name_suffix+'/'+name_sta1+'.'+name_sta2+'/'
+    output_CrossCorrelation_DAY = ORIENTATION_OUTPUT+'ASDF_FILES/'+cross_name_suffix+'/'+name_sta1+'.'+name_sta2+'/'
     os.makedirs(output_CrossCorrelation_DAY,exist_ok=True)
 
     cc_asdf = ASDFDataSet(output_CrossCorrelation_DAY+cross_name_suffix+'_'+name_sta1+'_'+name_sta2+'.h5', compression="gzip-3")
@@ -759,12 +754,12 @@ def plot_stacked_cc_interstation_distance(folder_name):
     '''
 
     #Collecting daily list of cross-correlations
-    crosscorr_days_lst = sorted(glob.glob(ASDF_FILES+folder_name+'/*'))
+    crosscorr_days_lst = sorted(glob.glob(ORIENTATION_OUTPUT+'ASDF_FILES/'+folder_name+'/*'))
 
     crosscorr_pairs_lst = []
     for i,j in enumerate(crosscorr_days_lst):
-    	crosscorr_file = sorted(glob.glob(j+'/*'))
-    	crosscorr_pairs_lst.append(crosscorr_file)
+        crosscorr_file = sorted(glob.glob(j+'/*'))
+        crosscorr_pairs_lst.append(crosscorr_file)
 
     #Make a list of list flat
     crosscorr_pairs = [item for sublist in crosscorr_pairs_lst for item in sublist]
@@ -948,8 +943,8 @@ def plot_stacked_cc_interstation_distance(folder_name):
         #--------------------------------------------------------------------------------------------------------------------
 
         for i,j in enumerate(crosscorr_stack_data_normalized_org_lst):
-        	ax2.plot(time_to_plot[i],[x+i/y_factor for x in crosscorr_stack_data_normalized_org_lst[i]],c=crosscorr_stack_style_org_lst[i],lw=0.5)
-
+            ax2.plot(time_to_plot[i],[x+i/y_factor for x in crosscorr_stack_data_normalized_org_lst[i]],c=crosscorr_stack_style_org_lst[i],lw=0.5)
+        
         ax2.set_yticks([i/y_factor for i in range(len(crosscorr_stack_data_normalized_org_lst))][::50])
         ax2.set_yticklabels([str(int(i)) for i in crosscorr_stack_data_normalized_dist_org_lst][::50])
 
@@ -1006,7 +1001,7 @@ def plot_stacked_cc_interstation_distance(folder_name):
         ax4 = fig.add_subplot(gs[3,0])
 
         for i,j in enumerate(crosscorr_stack_data_normalized_org_lst_20_50):
-        	ax4.plot(time_to_plot[i],[x+i/y_factor for x in crosscorr_stack_data_normalized_org_lst_20_50[i]],c=crosscorr_stack_style_org_lst[i],lw=0.5)
+            ax4.plot(time_to_plot[i],[x+i/y_factor for x in crosscorr_stack_data_normalized_org_lst_20_50[i]],c=crosscorr_stack_style_org_lst[i],lw=0.5)
 
         ax4.set_yticks([i/y_factor for i in range(len(crosscorr_stack_data_normalized_org_lst_20_50))][::50])
         ax4.set_yticklabels([str(int(i)) for i in crosscorr_stack_data_normalized_dist_org_lst][::50])
@@ -1062,7 +1057,7 @@ def plot_stacked_cc_interstation_distance(folder_name):
 
         ax6 = fig.add_subplot(gs[4,0])
         for i,j in enumerate(crosscorr_stack_data_normalized_org_lst_50_100):
-        	ax6.plot(time_to_plot[i],[x+i/y_factor for x in crosscorr_stack_data_normalized_org_lst_50_100[i]],c=crosscorr_stack_style_org_lst[i],lw=0.5)
+            ax6.plot(time_to_plot[i],[x+i/y_factor for x in crosscorr_stack_data_normalized_org_lst_50_100[i]],c=crosscorr_stack_style_org_lst[i],lw=0.5)
 
         ax6.set_yticks([i/y_factor for i in range(len(crosscorr_stack_data_normalized_org_lst_50_100))][::50])
         ax6.set_yticklabels([str(int(i)) for i in crosscorr_stack_data_normalized_dist_org_lst][::50])
@@ -1113,7 +1108,7 @@ def plot_stacked_cc_interstation_distance(folder_name):
                            )
         plt.colorbar(im, cax=axins, orientation="horizontal", ticklocation='top')
 
-        output_figure_CrossCorrelation_DAY = CLOCK_DRIFT_OUTPUT+'CROSS_CORR_STACK_INTERSTATION_DISTANCE_FIGURES/'
+        output_figure_CrossCorrelation_DAY = ORIENTATION_OUTPUT+'CROSS_CORR_STACK_INTERSTATION_DISTANCE_FIGURES/'
         os.makedirs(output_figure_CrossCorrelation_DAY,exist_ok=True)
         fig.savefig(output_figure_CrossCorrelation_DAY+folder_name+'_INTERSTATION_DISTANCE_FIG_'+chan_lst[ipairs]+'.png',dpi=300)
         plt.close()
@@ -1127,12 +1122,12 @@ def plot_stacked_cc_interstation_distance_per_obs(folder_name):
     '''
 
     #Collecting daily list of cross-correlations
-    crosscorr_days_lst = sorted(glob.glob(ASDF_FILES+folder_name+'/*'))
+    crosscorr_days_lst = sorted(glob.glob(ORIENTATION_OUTPUT+'ASDF_FILES/'+folder_name+'/*'))
 
     crosscorr_pairs_lst = []
     for i,j in enumerate(crosscorr_days_lst):
-    	crosscorr_file = sorted(glob.glob(j+'/*'))
-    	crosscorr_pairs_lst.append(crosscorr_file)
+        crosscorr_file = sorted(glob.glob(j+'/*'))
+        crosscorr_pairs_lst.append(crosscorr_file)
 
     #Make a list of list flat
     crosscorr_pairs = [item for sublist in crosscorr_pairs_lst for item in sublist]
@@ -1315,7 +1310,7 @@ def plot_stacked_cc_interstation_distance_per_obs(folder_name):
             crosscorr_stack_data_normalized_org_lst = [Normalize(a) for a in crosscorr_stack_data_normalized_org_lsts]
 
             for i,j in enumerate(crosscorr_stack_data_normalized_org_lst):
-            	ax2.plot(time_to_plot[i],[x+i/y_factor for x in crosscorr_stack_data_normalized_org_lst[i]],c=crosscorr_stack_style_org_lst[i],lw=0.5)
+                ax2.plot(time_to_plot[i],[x+i/y_factor for x in crosscorr_stack_data_normalized_org_lst[i]],c=crosscorr_stack_style_org_lst[i],lw=0.5)
 
             ax2.plot(savgol_filter(crosscorr_stack_data_normalized_vmax_org_lst,sav_f,1),savgol_filter([i/y_factor for i in range(len(crosscorr_stack_data_normalized_org_lst))],sav_f,1),ls='--',lw=0.5,c='r')
             ax2.plot(savgol_filter(crosscorr_stack_data_normalized_vmin_org_lst,sav_f,1),savgol_filter([i/y_factor for i in range(len(crosscorr_stack_data_normalized_org_lst))],sav_f,1),ls='--',lw=0.5,c='r')
@@ -1370,7 +1365,7 @@ def plot_stacked_cc_interstation_distance_per_obs(folder_name):
             ax4 = fig.add_subplot(gs[3,0])
 
             for i,j in enumerate(crosscorr_stack_data_normalized_org_lst_20_50):
-            	ax4.plot(time_to_plot[i],[x+i/y_factor for x in crosscorr_stack_data_normalized_org_lst_20_50[i]],c=crosscorr_stack_style_org_lst[i],lw=0.5)
+                ax4.plot(time_to_plot[i],[x+i/y_factor for x in crosscorr_stack_data_normalized_org_lst_20_50[i]],c=crosscorr_stack_style_org_lst[i],lw=0.5)
 
             ax4.plot(savgol_filter(crosscorr_stack_data_normalized_vmax_org_lst,sav_f,1),savgol_filter([i/y_factor for i in range(len(crosscorr_stack_data_normalized_org_lst_20_50))],sav_f,1),ls='--',lw=0.5,c='r')
             ax4.plot(savgol_filter(crosscorr_stack_data_normalized_vmin_org_lst,sav_f,1),savgol_filter([i/y_factor for i in range(len(crosscorr_stack_data_normalized_org_lst_20_50))],sav_f,1),ls='--',lw=0.5,c='r')
@@ -1424,7 +1419,7 @@ def plot_stacked_cc_interstation_distance_per_obs(folder_name):
 
             ax6 = fig.add_subplot(gs[4,0])
             for i,j in enumerate(crosscorr_stack_data_normalized_org_lst_50_100):
-            	ax6.plot(time_to_plot[i],[x+i/y_factor for x in crosscorr_stack_data_normalized_org_lst_50_100[i]],c=crosscorr_stack_style_org_lst[i],lw=0.5)
+                ax6.plot(time_to_plot[i],[x+i/y_factor for x in crosscorr_stack_data_normalized_org_lst_50_100[i]],c=crosscorr_stack_style_org_lst[i],lw=0.5)
 
             ax6.plot(savgol_filter(crosscorr_stack_data_normalized_vmax_org_lst,sav_f,1),savgol_filter([i/y_factor for i in range(len(crosscorr_stack_data_normalized_org_lst_50_100))],sav_f,1),ls='--',lw=0.5,c='r')
             ax6.plot(savgol_filter(crosscorr_stack_data_normalized_vmin_org_lst,sav_f,1),savgol_filter([i/y_factor for i in range(len(crosscorr_stack_data_normalized_org_lst_50_100))],sav_f,1),ls='--',lw=0.5,c='r')
@@ -1472,323 +1467,9 @@ def plot_stacked_cc_interstation_distance_per_obs(folder_name):
                                )
             plt.colorbar(im, cax=axins, orientation="horizontal", ticklocation='top')
 
-            output_figure_CrossCorrelation_DAY = CLOCK_DRIFT_OUTPUT+'CROSS_CORR_STACK_INTERSTATION_DISTANCE_FIGURES/'
+            output_figure_CrossCorrelation_DAY = ORIENTATION_OUTPUT+'CROSS_CORR_STACK_INTERSTATION_DISTANCE_FIGURES/'
             os.makedirs(output_figure_CrossCorrelation_DAY,exist_ok=True)
             fig.savefig(output_figure_CrossCorrelation_DAY+folder_name+'_INTERSTATION_DISTANCE_FIG_'+chan_lst[ipairs]+'_'+iOBS+'.png',dpi=300)
-            plt.close()
-
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-def Calculating_clock_drift_func(ipair):
-        '''
-        Calculating clock drift from cross-correlation data
-        @type input: name of the stations pair (str)
-        '''
-
-        pair_sta_1 = ipair.split('_')[0].split('..')[0]
-        pair_sta_2 = ipair.split('_')[1].split('..')[0]
-
-        # ---------------------
-        # Separating by channel
-        # ---------------------
-
-        HHE_HHE_lst = []
-        HHN_HHN_lst = []
-        HHZ_HHZ_lst = []
-
-        HHE_HHN_lst = []
-        HHN_HHE_lst = []
-
-        HHE_HHZ_lst = []
-        HHZ_HHE_lst = []
-
-        HHN_HHZ_lst = []
-        HHZ_HHN_lst = []
-
-        for i in crosscorr_pairs_obs:
-
-            if pair_sta_1 and pair_sta_2 in i:
-
-                # splitting subdir/basename
-                subdir, filename = os.path.split(i)
-                nameslst = filename.split("_20")[0]
-
-                name_pair1 = nameslst.split('_')[-2]
-                name_pair2 = nameslst.split('_')[-1]
-
-                name1 = nameslst.split('_')[-2].split('..')[0]
-                name2 = nameslst.split('_')[-1].split('..')[0]
-
-                channel_sta1 = nameslst.split('_')[-2].split('..')[1]
-                channel_sta2 = nameslst.split('_')[-1].split('..')[1]
-
-                if pair_sta_1 == name1 and pair_sta_2 == name2:
-
-                    # ------------------------------------------------------------------------------------------------------
-                    if channel_sta1 == 'HHE' and channel_sta2 == 'HHE' or channel_sta1 == 'HH2' and channel_sta2 == 'HH2' or channel_sta1 == 'HH2' and channel_sta2 == 'HHE' or  channel_sta1 == 'HHE' and channel_sta2 == 'HH2':
-                        HHE_HHE_lst.append(i)
-                    # ------------------------------------------------------------------------------------------------------
-                    if channel_sta1 == 'HHN' and channel_sta2 == 'HHN' or channel_sta1 == 'HH1' and channel_sta2 == 'HH1' or channel_sta1 == 'HHN' and channel_sta2 == 'HH1' or channel_sta1 == 'HH1' and channel_sta2 == 'HHN':
-                        HHN_HHN_lst.append(i)
-                    # ------------------------------------------------------------------------------------------------------
-                    if channel_sta1 == 'HHZ' and channel_sta2 == 'HHZ':
-                        HHZ_HHZ_lst.append(i)
-                    # ------------------------------------------------------------------------------------------------------
-                    if channel_sta1 == 'HHE' and channel_sta2 == 'HHN' or channel_sta1 == 'HH2' and channel_sta2 == 'HHN' or channel_sta1 == 'HHE' and channel_sta2 == 'HH1' or channel_sta1 == 'HH2' and channel_sta2 == 'HH1':
-                        HHE_HHN_lst.append(i)
-                    # ------------------------------------------------------------------------------------------------------
-                    if channel_sta1 == 'HHN' and channel_sta2 == 'HHE' or channel_sta1 == 'HH1' and channel_sta2 == 'HHE' or channel_sta1 == 'HHN' and channel_sta2 == 'HH2' or channel_sta1 == 'HH1' and channel_sta2 == 'HH2':
-                        HHN_HHE_lst.append(i)
-                    # ------------------------------------------------------------------------------------------------------
-                    if channel_sta1 == 'HHE' and channel_sta2 == 'HHZ' or channel_sta1 == 'HH2' and channel_sta2 == 'HHZ':
-                        HHE_HHZ_lst.append(i)
-                    # ------------------------------------------------------------------------------------------------------
-                    if channel_sta1 == 'HHZ' and channel_sta2 == 'HHE' or channel_sta1 == 'HHZ' and channel_sta2 == 'HH2':
-                        HHZ_HHE_lst.append(i)
-                    # ------------------------------------------------------------------------------------------------------
-                    if channel_sta1 == 'HHN' and channel_sta2 == 'HHZ' or channel_sta1 == 'HH1' and channel_sta2 == 'HHZ':
-                        HHN_HHZ_lst.append(i)
-                    # ------------------------------------------------------------------------------------------------------
-                    if channel_sta1 == 'HHZ' and channel_sta2 == 'HHN' or channel_sta1 == 'HHZ' and channel_sta2 == 'HH1':
-                        HHZ_HHN_lst.append(i)
-                    # ------------------------------------------------------------------------------------------------------
-
-        CHANNEL_fig_lst = [HHE_HHE_lst,HHE_HHN_lst,HHE_HHZ_lst,HHN_HHN_lst,HHN_HHE_lst,HHN_HHZ_lst,HHZ_HHE_lst,HHZ_HHN_lst,HHZ_HHZ_lst]
-        chan_lst = ['HHE-HHE','HHE-HHN','HHE-HHZ','HHN-HHN','HHN-HHE','HHN-HHZ','HHZ-HHE','HHZ-HHN','HHZ-HHZ']
-
-        # ------------------------------------------------------------------------------------------------------
-        # Starting the value list and the columns_headers:
-        columns_headers = ['sta_1','sta_2']
-
-        data_drift_lst = [pair_sta_1,pair_sta_2]
-
-        # ---------------------
-        # Calculating the drift
-        # ---------------------
-
-        for idch, i in enumerate(tqdm(CHANNEL_fig_lst,desc='Drift:'+pair_sta_1+'-'+pair_sta_2)):
-
-            if len(i) > 1:
-
-                # ------------
-                # Reading data
-                # ------------
-
-                crosscorr_pair_date_filename = [filename.split('/')[-1] for filename in i]
-                crosscorr_pair_date = [datetime.datetime.strptime(filename.split('/')[-1].split('_')[-2]+'.'+filename.split('/')[-1].split('_')[-1].split('.')[0], '%Y.%j') for filename in crosscorr_pair_date_filename]
-
-                sta1_sta2_asdf_file = [ASDFDataSet(k, mode='r') for k in i]
-
-                name_sta1 = [file.auxiliary_data.CrossCorrelation.list()[0] for file in sta1_sta2_asdf_file]
-                name_sta2 = [file.auxiliary_data.CrossCorrelation.list()[1] for file in sta1_sta2_asdf_file]
-
-                dist_pair = [sta1_sta2_asdf_file[id].auxiliary_data.CrossCorrelation[name_sta1[id]][name_sta2[id]].parameters['dist'] for id,jd in enumerate(name_sta1)]
-                loc_sta1 = [sta1_sta2_asdf_file[id].auxiliary_data.CrossCorrelation[name_sta1[id]][name_sta2[id]].parameters['sta1_loc'] for id,jd in enumerate(name_sta1)]
-                loc_sta2 = [sta1_sta2_asdf_file[id].auxiliary_data.CrossCorrelation[name_sta1[id]][name_sta2[id]].parameters['sta2_loc'] for id,jd in enumerate(name_sta1)]
-
-                causal_time = [sta1_sta2_asdf_file[id].auxiliary_data.CrossCorrelation[name_sta1[id]][name_sta2[id]].parameters['crosscorr_daily_causal_time']  for id,jd in enumerate(name_sta1)]
-                acausal_time = [sta1_sta2_asdf_file[id].auxiliary_data.CrossCorrelation[name_sta2[id]][name_sta1[id]].parameters['crosscorr_daily_acausal_time'] for id,jd in enumerate(name_sta1)]
-
-                # ------------
-                # Stacked data
-                # ------------
-
-                causal_lst = [jd.auxiliary_data.CrossCorrelation[name_sta1[id]][name_sta2[id]].data[::] for id,jd in enumerate(sta1_sta2_asdf_file)]
-                acausal_lst = [jd.auxiliary_data.CrossCorrelation[name_sta2[id]][name_sta1[id]].data[::] for id,jd in enumerate(sta1_sta2_asdf_file)]
-
-                # ----------------------------------------------------------------------------------------------------
-
-                for iband, per_bands in enumerate(PERIOD_BANDS):
-
-                    column_date_n = chan_lst[idch]+' date ['+str(per_bands[0])+'-'+str(per_bands[1])+' s]'
-                    column_coefficient_n = chan_lst[idch]+' coefficient ['+str(per_bands[0])+'-'+str(per_bands[1])+' s]'
-                    column_shift_n = chan_lst[idch]+' shift ['+str(per_bands[0])+'-'+str(per_bands[1])+' s]'
-
-                    columns_headers.extend([column_date_n,column_coefficient_n,column_shift_n])
-
-                    # ----------------------------------------------------------------------------------------------------
-
-                    date_to_plot_clock = []
-                    data_to_plot_coefficient_clock_drift = []
-                    data_to_plot_shift_clock_drift = []
-
-                    for k in range(len(causal_lst)):
-
-                        data_acausal_causal = np.array(acausal_lst[k] + causal_lst[k])
-                        data_normalized = np.array(Normalize(data_acausal_causal))
-                        time_acausal_causal = np.array(acausal_time[k] + causal_time[k])
-
-                        dist_pair_norm = dist_pair[k]
-
-                        # --------------------------------------------------------
-                        # Collecting daily list of 10-day stack cross-correlations
-                        # --------------------------------------------------------
-
-                        sta1_sta2_asdf_file_10_day = ASDFDataSet(glob.glob(ASDF_FILES+'CROSS_CORR_10_DAYS_STACKED_FILES/'+name_sta1[k]+'.'+name_sta2[k]+'/*')[0], mode='r')
-                        stacked_10_day_data = sta1_sta2_asdf_file_10_day.auxiliary_data.CrossCorrelationStacked[name_sta2[k]][name_sta1[k]].data[::]+sta1_sta2_asdf_file_10_day.auxiliary_data.CrossCorrelationStacked[name_sta1[k]][name_sta2[k]].data[::]
-                        stacked_10_day_time = sta1_sta2_asdf_file_10_day.auxiliary_data.CrossCorrelationStacked[name_sta2[k]][name_sta1[k]].parameters['crosscorr_stack_time'] +sta1_sta2_asdf_file_10_day.auxiliary_data.CrossCorrelationStacked[name_sta1[k]][name_sta2[k]].parameters['crosscorr_stack_time']
-                        stacked_10_day_data_normalized = np.array(Normalize(stacked_10_day_data))
-
-                        # --------------------------------------------------------
-
-                        stacked_10_day_data_normalized_band = bandpass(stacked_10_day_data_normalized, 1.0/per_bands[1], 1.0/per_bands[0], NEW_SAMPLING_RATE, corners=2, zerophase=False)
-                        data_normalized_band = bandpass(data_normalized, 1.0/per_bands[1], 1.0/per_bands[0], NEW_SAMPLING_RATE, corners=2, zerophase=False)
-
-                        shift_clock_drift, coefficient_clock_drift = obscorr_window(stacked_10_day_data_normalized_band,stacked_10_day_time,data_normalized_band,time_acausal_causal,dist_pair_norm,SIGNAL_WINDOW_VMIN,SIGNAL_WINDOW_VMAX)
-
-                        date_to_plot_clock.append(crosscorr_pair_date[k])
-                        data_to_plot_coefficient_clock_drift.append(coefficient_clock_drift)
-                        data_to_plot_shift_clock_drift.append(shift_clock_drift)
-
-                    # --------------------------------------------------------------------------------------
-
-                    data_drift_lst.append(date_to_plot_clock)
-                    data_drift_lst.append(data_to_plot_coefficient_clock_drift)
-                    data_drift_lst.append(data_to_plot_shift_clock_drift)
-
-            else:
-
-                for iband, per_bands in enumerate(PERIOD_BANDS):
-
-                    column_date_n = chan_lst[idch]+' date ['+str(per_bands[0])+'-'+str(per_bands[1])+' s]'
-                    column_coefficient_n = chan_lst[idch]+' coefficient ['+str(per_bands[0])+'-'+str(per_bands[1])+' s]'
-                    column_shift_n = chan_lst[idch]+' shift ['+str(per_bands[0])+'-'+str(per_bands[1])+' s]'
-
-                    columns_headers.extend([column_date_n,column_coefficient_n,column_shift_n])
-
-                    data_drift_lst.append([])
-                    data_drift_lst.append([])
-                    data_drift_lst.append([])
-
-        # ----------------------------------------------------------------------------------------------------
-        # Creating a Pandas DataFrame:
-        column_info = [dist_pair[0],loc_sta1[0],loc_sta2[0]]
-        for i in column_info:
-            data_drift_lst.append(i)
-
-        columns_headers1 = ['distance','loc_sta1','loc_sta2']
-        for i in columns_headers1:
-            columns_headers.append(i)
-
-
-        clock_drift_df = pd.DataFrame(data_drift_lst, index=columns_headers).T
-
-        # ----------------------------------------------------------------------------------------------------
-        # Convert from pandas to Arrow and saving in feather formart file
-        os.makedirs(FEATHER_FILES,exist_ok=True)
-        file_feather_name = FEATHER_FILES+pair_sta_1+'.'+pair_sta_2+'_clock_drift_data.feather'
-        feather.write_feather(clock_drift_df, file_feather_name)
-        # ----------------------------------------------------------------------------------------------------
-
-        if VERBOSE == True:
-
-            # --------------------------------------------
-            # Creating the figure and plotting Clock-drift
-            # --------------------------------------------
-
-            fig = plt.figure(figsize=(20, 15))
-            fig.suptitle('Clock-drift: '+pair_sta_1+'-'+pair_sta_2+'('+str(round(dist_pair))+' km)',fontsize=20)
-            fig.autofmt_xdate()
-            # ----------------------------------------------------------------------------------------------------
-
-            gs = gridspec.GridSpec(9, 2,wspace=0.5, hspace=0.8)
-            map_loc = fig.add_subplot(gs[:,0],projection=ccrs.PlateCarree())
-
-            LLCRNRLON_LARGE = -52
-            URCRNRLON_LARGE = -38
-            LLCRNRLAT_LARGE = -30
-            URCRNRLAT_LARGE = -12
-
-            map_loc.set_extent([LLCRNRLON_LARGE,URCRNRLON_LARGE,LLCRNRLAT_LARGE,URCRNRLAT_LARGE])
-            map_loc.yaxis.set_ticks_position('both')
-            map_loc.xaxis.set_ticks_position('both')
-
-            map_loc.set_xticks(np.arange(LLCRNRLON_LARGE,URCRNRLON_LARGE+3,3), crs=ccrs.PlateCarree())
-            map_loc.set_yticks(np.arange(LLCRNRLAT_LARGE,URCRNRLAT_LARGE+3,3), crs=ccrs.PlateCarree())
-            map_loc.tick_params(labelbottom=True, labeltop=True, labelleft=True, labelright=True, labelsize=12)
-            map_loc.grid(True,which='major',color='gray',linewidth=0.5,linestyle='--')
-
-            reader_1_SHP = Reader(BOUNDARY_STATES_SHP)
-            shape_1_SHP = list(reader_1_SHP.geometries())
-            plot_shape_1_SHP = cfeature.ShapelyFeature(shape_1_SHP, ccrs.PlateCarree())
-            map_loc.add_feature(plot_shape_1_SHP, facecolor='none', edgecolor='k',linewidth=0.5,zorder=-1)
-            # Use the cartopy interface to create a matplotlib transform object
-            # for the Geodetic coordinate system. We will use this along with
-            # matplotlib's offset_copy function to define a coordinate system which
-            # translates the text by 25 pixels to the left.
-            geodetic_transform = ccrs.Geodetic()._as_mpl_transform(map_loc)
-            text_transform = offset_copy(geodetic_transform, units='dots', y=50,x=100)
-
-            map_loc.plot([loc_sta1[1],loc_sta2[1]],[loc_sta1[0],loc_sta2[0]],c='k',alpha=0.5,transform=ccrs.PlateCarree())
-            map_loc.scatter(loc_sta1[1],loc_sta1[0], marker='^',s=200,c='k',edgecolors='w', transform=ccrs.PlateCarree())
-            map_loc.scatter(loc_sta2[1],loc_sta2[0], marker='^',s=200,c='k',edgecolors='w', transform=ccrs.PlateCarree())
-
-            map_loc.text(loc_sta1[1],loc_sta1[0], pair_sta_1,fontsize=12,verticalalignment='center', horizontalalignment='right',transform=text_transform)
-            map_loc.text(loc_sta2[1],loc_sta2[0], pair_sta_2,fontsize=12,verticalalignment='center', horizontalalignment='right',transform=text_transform)
-
-            # ----------------------------------------------------------------------------------------------------
-            days_major = DayLocator(interval=5)   # every 5 day
-            days_minor = DayLocator(interval=1)   # every day
-            months = MonthLocator(interval=3)  # every month
-            yearsFmt = DateFormatter('%b-%Y')
-
-            for z,x in enumerate(data_to_plot_coefficient_clock_drift_chan):
-                if len(x) > 1:
-                    # ----------------------------------------------------------------------------------------------------
-                    ax0 = fig.add_subplot(gs[z,1])
-                    ax0.xaxis.set_major_locator(months)
-                    ax0.xaxis.set_major_formatter(yearsFmt)
-                    ax0.xaxis.set_minor_locator(days_minor)
-                    ax0.yaxis.set_major_locator(MultipleLocator(100))
-                    ax0.yaxis.set_minor_locator(MultipleLocator(25))
-                    ax0.set_ylabel('Erro do Relógios (s)')
-                    ax0.set_title(chan_lst[z])
-                    ax0.set_ylim(-100,100)
-
-                    # -------------------------------------------------------------------------------------------------------------
-                    slope, intercept, r, p, std_err = stats.linregress(x, y)
-
-                    def myfunc(x):
-                      return slope * x + intercept
-
-                    mymodel = list(map(myfunc, x))
-                    pol_reg.fit(X_poly, data_to_plot_shift_clock_drift_chan[z])
-                    # -------------------------------------------------------------------------------------------------------------
-                    for y,u in enumerate(data_to_plot_shift_clock_drift_chan[z]):
-                        if data_to_plot_coefficient_clock_drift_chan[z][y] > 0.3:
-                            im = ax0.scatter(date_to_plot_clock_chan[z][y],data_to_plot_shift_clock_drift_chan[z][y],c=data_to_plot_coefficient_clock_drift_chan[z][y],marker='o',edgecolors=None,cmap='magma',s=10,vmin=0,vmax=1,alpha=0.9)
-                        else:
-                            im = ax0.scatter(date_to_plot_clock_chan[z][y],data_to_plot_shift_clock_drift_chan[z][y],c=data_to_plot_coefficient_clock_drift_chan[z][y],marker='o',edgecolors=None,cmap='magma',s=5,vmin=0,vmax=1,alpha=0.2)
-
-                    ax0.plot(date_to_plot_clock_chan[z], pol_reg.predict(poly_reg.fit_transform(np.array(range(len(data_to_plot_shift_clock_drift_chan[z]))).reshape(-1, 1))),'--b')
-
-                    if z == 0:
-                        axins = inset_axes(ax0,
-                                               width="30%",  # width = 10% of parent_bbox width
-                                               height="10%",  # height : 5%
-                                               loc='upper left',
-                                               bbox_to_anchor=(0.65,0.1, 1, 1),
-                                               bbox_transform=ax0.transAxes,
-                                               borderpad=0,
-                                               )
-                        plt.colorbar(im, cax=axins, orientation="horizontal", ticklocation='top')
-
-                else:
-
-                    ax0 = fig.add_subplot(gs[z,1])
-                    ax0.xaxis.set_major_locator(months)
-                    ax0.xaxis.set_major_formatter(yearsFmt)
-                    ax0.xaxis.set_minor_locator(days_minor)
-                    ax0.yaxis.set_major_locator(MultipleLocator(100))
-                    ax0.yaxis.set_minor_locator(MultipleLocator(25))
-                    ax0.set_ylabel('Erro do Relógio (s)')
-                    ax0.set_title(chan_lst[z])
-                    ax0.set_ylim(-200,200)
-
-            # -------------------------------------------------------------------------------------------------------------
-            output_figure_CLOCK_DRIFT = CLOCK_DRIFT_OUTPUT+'CLOCK_DRIFT_FIGURES/'
-            os.makedirs(output_figure_CLOCK_DRIFT,exist_ok=True)
-            fig.savefig(output_figure_CLOCK_DRIFT+'CLOCK_DRIFT_BETWEEN_'+pair_sta_1+'_'+pair_sta_2+'.png',dpi=300)
             plt.close()
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1800,12 +1481,12 @@ def plot_stacked_cc_interstation_distance_per_obs_short(folder_name):
     '''
 
     #Collecting daily list of cross-correlations
-    crosscorr_days_lst = sorted(glob.glob(ASDF_FILES+folder_name+'/*'))
+    crosscorr_days_lst = sorted(glob.glob(ORIENTATION_OUTPUT+'ASDF_FILES/'+folder_name+'/*'))
 
     crosscorr_pairs_lst = []
     for i,j in enumerate(crosscorr_days_lst):
-    	crosscorr_file = sorted(glob.glob(j+'/*'))
-    	crosscorr_pairs_lst.append(crosscorr_file)
+        crosscorr_file = sorted(glob.glob(j+'/*'))
+        crosscorr_pairs_lst.append(crosscorr_file)
 
     #Make a list of list flat
     crosscorr_pairs = [item for sublist in crosscorr_pairs_lst for item in sublist]
@@ -2085,7 +1766,7 @@ def plot_stacked_cc_interstation_distance_per_obs_short(folder_name):
                                )
             plt.colorbar(im, cax=axins, orientation="horizontal", ticklocation='top')
 
-            output_figure_CrossCorrelation_DAY = CLOCK_DRIFT_OUTPUT+'CROSS_CORR_STACK_INTERSTATION_DISTANCE_FIGURES/'
+            output_figure_CrossCorrelation_DAY = ORIENTATION_OUTPUT+'CROSS_CORR_STACK_INTERSTATION_DISTANCE_FIGURES/'
             os.makedirs(output_figure_CrossCorrelation_DAY,exist_ok=True)
             fig.savefig(output_figure_CrossCorrelation_DAY+folder_name+'_INTERSTATION_DISTANCE_FIG_'+chan_lst[ipairs]+'_'+iOBS+'.png',dpi=300)
             plt.close()
@@ -2249,7 +1930,7 @@ print('Calculating daily Cross-correlations:')
 print('====================================')
 print('\n')
 
-days_crosscor = sorted(glob.glob(ASDF_FILES+'DATA_DAY_FILES/*'))
+days_crosscor = sorted(glob.glob(ORIENTATION_OUTPUT+'ASDF_FILES/'+'DATA_DAY_FILES/*'))
 
 stationtrace_pairs_lst = []
 for i,j in enumerate(days_crosscor):
@@ -2273,7 +1954,7 @@ print('============================')
 print('\n')
 
 #Collecting daily list of cross-correlations
-crosscorr_days_lst = sorted(glob.glob(ASDF_FILES+'CROSS_CORR_DAY_FILES/*'))
+crosscorr_days_lst = sorted(glob.glob(ORIENTATION_OUTPUT+'ASDF_FILES/'+'CROSS_CORR_DAY_FILES/*'))
 
 crosscorr_pairs_lst = []
 for i,j in enumerate(crosscorr_days_lst):
@@ -2329,7 +2010,7 @@ print('=========================================')
 print('\n')
 
 #Collecting daily list of cross-correlations
-crosscorr_days_lst = sorted(glob.glob(ASDF_FILES+'CROSS_CORR_DAY_FILES/*'))
+crosscorr_days_lst = sorted(glob.glob(ORIENTATION_OUTPUT+'ASDF_FILES/'+'CROSS_CORR_DAY_FILES/*'))
 
 crosscorr_pairs_lst = []
 for i,j in enumerate(crosscorr_days_lst):
@@ -2378,7 +2059,7 @@ print('============================')
 print('\n')
 
 #Collecting daily list of cross-correlations
-crosscorr_days_lst = sorted(glob.glob(ASDF_FILES+'CROSS_CORR_10_DAYS_FILES/*'))
+crosscorr_days_lst = sorted(glob.glob(ORIENTATION_OUTPUT+'ASDF_FILES/'+'CROSS_CORR_10_DAYS_FILES/*'))
 
 crosscorr_pairs_lst = []
 for i,j in enumerate(crosscorr_days_lst):
@@ -2443,7 +2124,7 @@ for iOBS in OBS_LST:
     # Collecting daily list of cross-correlations
     # -------------------------------------------
 
-    crosscorr_pairs = sorted(glob.glob(ASDF_FILES+'CROSS_CORR_10_DAYS_STACKED_FILES/**/*.h5', recursive=True))
+    crosscorr_pairs = sorted(glob.glob(ORIENTATION_OUTPUT+'ASDF_FILES/'+'CROSS_CORR_10_DAYS_STACKED_FILES/**/*.h5', recursive=True))
 
     # --------------------------------
     # Separating according to OBS name
