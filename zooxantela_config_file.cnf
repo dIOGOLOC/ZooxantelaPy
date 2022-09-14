@@ -153,22 +153,22 @@ BASE_URL_or_KEY = IRIS
 TAUPY_MODEL = iasp91
 
 #Minimum event distance
-EV_GCARC_MIN = 0
+EV_GCARC_MIN = 5
 
 #Maximum event distance
-EV_GCARC_MAX = 90
+EV_GCARC_MAX = 175
 
 #Minimum event magnitude
-EV_MAGNITUDE_MB = 5
+EV_MAGNITUDE_MB = 6
 
 #Date event initial  (exemple: 2008-01-01T00:00:00)
-INITIAL_DATE_EVENT = 2019-05-01T00:00:00
+INITIAL_DATE_EVENT = 2019-06-01T00:00:00
 
 #Date event final  (exemple: 2008-01-01T00:00:00)
-FINAL_DATE_EVENT = 2020-09-01T00:00:00
+FINAL_DATE_EVENT = 2020-07-01T00:00:00
 
 #Time to trim the seismogram before P-wave arrival
 CUT_BEFORE_P = 10
 
 #Time to trim the seismogram after P-wave arrival
-CUT_AFTER_P = 200
+CUT_AFTER_P = 1000

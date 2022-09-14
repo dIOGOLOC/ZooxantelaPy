@@ -64,6 +64,7 @@ from obspy.signal.trigger import classic_sta_lta, trigger_onset, coincidence_tri
 # ========================
 
 #MSEED_FOLDER = '/media/diogoloc/Backup/dados_posdoc/ON_MAR/obs_data_MSEED/'
+#MSEED_FOLDER = '/home/diogoloc/dados_posdoc/ON_MAR/RSBR_OBS_DATA/'
 MSEED_FOLDER = '/home/diogoloc/dados_posdoc/ON_MAR/obs_data_MSEED/'
 
 #EARTHQUAKE_FINDER_OUTPUT = '/media/diogoloc/Backup/dados_posdoc/ON_MAR/EARTHQUAKE_FINDER_NETWORK_OUTPUT/FIGURAS/'
@@ -143,8 +144,8 @@ for iperid,period_date in enumerate(tqdm(INTERVAL_PERIOD_DATE,desc='File loop'))
 
     st = Stream()
     for file in obs_day_files:
-        #if 'HHX' not in file and 'OBS19' not in file and 'OBS22' not in file and 'OBS20' not in file:
-        if 'HHX' not in file and 'OBS19' not in file:
+        if 'HHX' not in file and 'OBS19' not in file and 'OBS22' not in file and 'OBS20' not in file:
+        #if 'HHX' not in file and 'OBS19' not in file:
         #if 'HHX' in file:
             st.append(read(file)[0])
 

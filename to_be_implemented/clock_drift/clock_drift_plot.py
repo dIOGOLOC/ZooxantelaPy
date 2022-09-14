@@ -55,25 +55,17 @@ from sklearn.linear_model import LinearRegression
 
 from pyasdf import ASDFDataSet
 import verde as vd
-import geopandas as gpd
 
 # ==================
 # Configuration file
 # ==================
 
-# Folders input
-
-MSEED_DIR_OBS = '/media/diogoloc/Backup/dados_posdoc/ON_MAR/obs_data_MSEED/'
-
-MSEED_DIR_STA = '/media/diogoloc/Backup/dados_posdoc/ON_MAR/data/'
-
-# -------------------------------
 
 # Shapefile  boundary states input
 
-BOUNDARY_STATES_SHP = '/media/diogoloc/Backup/dados_posdoc/SIG_dados/Projeto_ON_MAR/shapefile/brasil_estados/UFEBRASIL.shp'
+BOUNDARY_STATES_SHP = '/home/diogoloc/dados_posdoc/SIG_Dados/Brasil_RSBR/Shapefile/estados_brasil/UFEBRASIL.shp'
 
-OCEANO_SHAPEFILE = '/home/diogoloc/SIG_dados/Projeto_ON_MAR/shapefile/area_batimetria/area_ON_projeto.shp'
+OCEANO_SHAPEFILE = '/home/diogoloc/dados_posdoc/SIG_Dados/Projeto_ON_MAR/shapefile/area_batimetria/area_ON_projeto.shp'
 
 # -------------------------------
 
@@ -94,7 +86,7 @@ CLOCK_DRIFT_OUTPUT = '/home/diogoloc/dados_posdoc/ON_MAR/CLOCK_DRIFT_OUTPUT/FIGU
 
 ASDF_FILES = '/home/diogoloc/dados_posdoc/ON_MAR/CLOCK_DRIFT_OUTPUT/ASDF_FILES/'
 
-PICKLE_FILES = '/home/diogoloc/dados_posdoc/ON_MAR/CLOCK_DRIFT_OUTPUT/PICKLE_FILES/'
+PICKLE_FILES = '/home/diogoloc/dados_posdoc/ON_MAR/CLOCK_DRIFT_OUTPUT/FEATHER_FILES/'
 
 # -------------------------------
 
@@ -115,8 +107,6 @@ SHIFT_LEN = 1800
 
 PERIOD_BANDS = [[2, 5], [7, 25], [20, 50], [50, 100]]
 # (these bands focus on periods ~7, 15, 25 seconds)
-
-FREQUENCY_BANDS = [[0.5, 1], [1, 2], [2, 3], [3, 4]]
 
 # default parameters to define the signal and noise windows used to
 # estimate the SNR:
@@ -357,7 +347,6 @@ for l,k in enumerate(OBS_LST):
     clock_drift_files_loc_sta1_all.append(clock_drift_files_loc_sta1)
     clock_drift_files_loc_sta2_all.append(clock_drift_files_loc_sta2)
 
-'''
     #Creating the figure and plotting Clock-drift
     fig = plt.figure(figsize=(20, 10))
     fig.suptitle('Clock-drift total: '+OBS_LST[l],fontsize=20)
@@ -442,7 +431,7 @@ print('Clock Drift for each OBS:')
 print('=========================')
 print('\n')
 
-'''
+
 
 print('Creating GRID POINTS')
 print('\n')
