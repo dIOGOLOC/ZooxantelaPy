@@ -41,6 +41,7 @@ from scipy.signal import spectrogram, detrend, resample,savgol_filter,decimate,h
 from obspy.signal.invsim import cosine_taper
 from scipy.linalg import norm
 
+import pyarrow.feather as feather
 
 import random
 import collections
@@ -285,153 +286,188 @@ for iOBS in OBS_LST:
     OBS_cc1_max = []
     OBS_SRN = []
     for k in tqdm(range(len(HHE_lst)),desc=iOBS+' orientation'):
-        #Data HHE
-        tr2_data_file = op.read(HHE_lst[k])
-        tr2_data_file.decimate(factor=10, strict_length=False)
-        tr2_data_file.taper(type='cosine',max_percentage=0.1)
-        tr2_data_file.filter('bandpass',freqmin=PERIOD_BANDS2[0],freqmax=PERIOD_BANDS2[1],zerophase=True)
-        tr2_data_filtered = tr2_data_file[0].data
-
-        #Data HHN
-        tr1_data_file = op.read(HHN_lst[k])
-        tr1_data_file.decimate(factor=10, strict_length=False)
-        tr1_data_file.taper(type='cosine',max_percentage=0.1)
-        tr1_data_file.filter('bandpass',freqmin=PERIOD_BANDS2[0],freqmax=PERIOD_BANDS2[1],zerophase=True)
-        tr1_data_filtered = tr1_data_file[0].data
-
-        #Data HHZ
-        trZ_data_file = op.read(HHZ_lst[k])
-        trZ_data_file.decimate(factor=10, strict_length=False)
-        trZ_data_file.taper(type='cosine',max_percentage=0.1)
-        trZ_data_file.filter('bandpass',freqmin=PERIOD_BANDS2[0],freqmax=PERIOD_BANDS2[1],zerophase=True)
-        trZ_data_filtered = trZ_data_file[0].data
-        trZ_time = trZ_data_file[0].times()
-
+        
         # splitting subdir/basename
         subdir, filename = os.path.split(HHE_lst[k])
         nameslst = filename.split(iOBS+'.')[1]
         event_name = nameslst[:-2]
 
-        #epicentral distance:
-        dist_pair = trZ_data_file[0].stats.sac.dist
-        gcarc_pair = trZ_data_file[0].stats.sac.gcarc
-        gcarc_pair_round = round(gcarc_pair)
-        dist_pair_round = round(dist_pair)
-        baz_pair = trZ_data_file[0].stats.sac.baz
-        #-------------------------------------------------------------------------------------------------------------------------------
-        # Calculating Hilbert transform of vertical trace data
-        trZ_H_data_filtered = np.imag(hilbert(trZ_data_filtered))
-            
-        #-------------------------------------------------------------------------------------------------------------------------------
-        signal_window = (trZ_time >= TIME_START_P_REGIONAL) & (trZ_time <= TIME_FINAL_P_REGIONAL)
-        noise_window = (trZ_time < TIME_START_P_REGIONAL) != (trZ_time > TIME_FINAL_P_REGIONAL)
-        noise_rotated = tr1_data_filtered[noise_window].std()
-
-        tr2 = tr2_data_filtered[signal_window]
-        tr1 = tr1_data_filtered[signal_window]
-        trZ = trZ_data_filtered[signal_window]
-
-        # Calculate Hilbert transform of vertical trace data
-        trZ_H = np.imag(hilbert(trZ))
-
-        # Rotate through and find max normalized covariance
-        dphi = 0.1
-        ang = np.arange(0., 360., dphi)
-        ang_arr = np.zeros(len(ang))
-
-        cc1 = np.zeros(len(ang))
-        cc2 = np.zeros(len(ang))
-        cc3 = np.zeros(len(ang))
-
-        SNR_rotate = np.zeros(len(ang))
-
-        for k, a in enumerate(ang):
-            R, T = rotate_ne_rt(tr1, tr2, a)
-            covmat = np.corrcoef(R, trZ_H)
-            cc1[k] = covmat[0,1]
-            cstar = np.cov(trZ_H, R)/np.cov(trZ_H)
-            cc2[k] = cstar[0,1]
-            cstar=np.cov(trZ_H, T)/np.cov(trZ_H)
-            cc3[k] = cstar[0,1]
-            SNR_rotate[k] = np.abs(R).max()/noise_rotated
-
-        # Get argument of maximum of cc:
-        ia = cc2.argmax()
-   
-        # Get azimuth and correct for angles above 360
-        phi = (baz_pair - (360 - ia*dphi))
+        #Check if file exists
+        output_FEATHER_FILES_ORIENTATION = ORIENTATION_OUTPUT+'FEATHER_FILES/'
         
-        if phi<0: phi+=360
-        if phi>=360: phi-=360
-        phi = ang[ia]
-        # Get argument of maximum coherence (R_zr):
-        cc1_max = cc1.max()
-        cc2_max = cc2.max()
-        cc3_max = cc3.max()
-        SNR_rotate_max = SNR_rotate.max()
+        file_feather_name = output_FEATHER_FILES_ORIENTATION+event_name+'_ORIENTATION_data.feather'
+        if os.path.isfile(file_feather_name):
+            pass
 
-        OBS_orientation.append(ang[ia])
-        OBS_cc1_max.append(cc1_max)
-        OBS_SRN.append(SNR_rotate_max)
-
-        # --------------------
-        # fig CrossCorrelation
-        fig = plt.figure(figsize=(20, 10))
-        fig.suptitle('Evento: '+event_name+' (Δ:'+str(gcarc_pair_round)+'°)',fontsize=20)
-
-        gs = gridspec.GridSpec(3, 2,wspace=0.2, hspace=0.5)
-
-        new_R, new_T = rotate_ne_rt(tr1_data_filtered, tr2_data_filtered, phi)
-
-        ax1 = fig.add_subplot(gs[0,0])
-        ax1.plot(trZ_time,new_T,'-k')
-        ax1.set_ylabel('$C_{tz}$')
-        ax1.set_xlabel('Timelag (s)')
-        ax1.axvline(x=TIME_START_P_REGIONAL, ymin=0, ymax=1,color='gray',linestyle='--',lw=1)
-        ax1.axvline(x=TIME_FINAL_P_REGIONAL, ymin=0, ymax=1,color='gray',linestyle='--',lw=1)
-
-        ax2 = fig.add_subplot(gs[1,0], sharey=ax1, sharex=ax1)
-        ax2.plot(trZ_time,new_R,'-k')
-        ax2.plot(trZ_time,trZ_H_data_filtered,'--r')
-        ax2.set_ylabel('$C_{rz}$')
-        ax2.set_xlabel('Timelag (s)')
-        ax2.axvline(x=TIME_START_P_REGIONAL, ymin=0, ymax=1,color='gray',linestyle='--',lw=1)
-        ax2.axvline(x=TIME_FINAL_P_REGIONAL, ymin=0, ymax=1,color='gray',linestyle='--',lw=1)
-
-        ax3 = fig.add_subplot(gs[2,0], sharey=ax1, sharex=ax1)
-        ax3.plot(trZ_time,trZ_data_filtered,'-k')
-        ax3.set_ylabel('$C_{zz}$')
-        ax3.set_xlabel('Timelag (s)')
-        ax3.axvline(x=TIME_START_P_REGIONAL, ymin=0, ymax=1,color='gray',linestyle='--',lw=1)
-        ax3.axvline(x=TIME_FINAL_P_REGIONAL, ymin=0, ymax=1,color='gray',linestyle='--',lw=1)
-
-        ax4 = fig.add_subplot(gs[0,1])
-        ax4.plot(ang,cc1,'--k')
-        ax4.plot(phi,cc1_max,'*r')
-        ax4.set_ylabel('$R_{rz}$')
-        ax4.set_xlabel('Orientation Angle (deg)')
-
-        ax5 = fig.add_subplot(gs[1,1], sharex=ax4)
-        ax5.plot(ang,cc2,'--k')
-        ax5.plot(phi,cc2_max,'*r')
-        ax5.set_ylabel('$S_{rz}$')
-        ax5.set_xlabel('Orientation Angle (deg)')
-
-        ax6 = fig.add_subplot(gs[2,1])
-        ax6.plot(ang,SNR_rotate,'--k')
-        ax6.plot(phi,SNR_rotate_max,'*r')
-        ax6.set_ylabel('SNR')
-        ax6.set_xlabel('Orientation Angle (deg)')
-
-        if (cc1_max >= CC_MIN) & (SNR_rotate_max >= SNR_MIN):
-            label = 'good'
         else:
-            label = 'bad'
-        output_figure_ORIENTATION = ORIENTATION_OUTPUT+'ORIENTATION_FIGURES/EARTHQUAKES/'+iOBS+'/'
-        os.makedirs(output_figure_ORIENTATION,exist_ok=True)
-        fig.savefig(output_figure_ORIENTATION+'ORIENTATION_'+event_name+'_'+label+'.png',dpi=300)
-        plt.close()
+            try:            
+                #Data HHE
+                tr2_data_file = op.read(HHE_lst[k])
+                tr2_data_file.decimate(factor=10, strict_length=False)
+                tr2_data_file.taper(type='cosine',max_percentage=0.1)
+                tr2_data_file.filter('bandpass',freqmin=PERIOD_BANDS2[0],freqmax=PERIOD_BANDS2[1],zerophase=True)
+                tr2_data_filtered = tr2_data_file[0].data
 
+                #Data HHN
+                tr1_data_file = op.read(HHN_lst[k])
+                tr1_data_file.decimate(factor=10, strict_length=False)
+                tr1_data_file.taper(type='cosine',max_percentage=0.1)
+                tr1_data_file.filter('bandpass',freqmin=PERIOD_BANDS2[0],freqmax=PERIOD_BANDS2[1],zerophase=True)
+                tr1_data_filtered = tr1_data_file[0].data
+
+                #Data HHZ
+                trZ_data_file = op.read(HHZ_lst[k])
+                trZ_data_file.decimate(factor=10, strict_length=False)
+                trZ_data_file.taper(type='cosine',max_percentage=0.1)
+                trZ_data_file.filter('bandpass',freqmin=PERIOD_BANDS2[0],freqmax=PERIOD_BANDS2[1],zerophase=True)
+                trZ_data_filtered = trZ_data_file[0].data
+                trZ_time = trZ_data_file[0].times()
+
+                #epicentral distance:
+                dist_pair = trZ_data_file[0].stats.sac.dist
+                gcarc_pair = trZ_data_file[0].stats.sac.gcarc
+                gcarc_pair_round = round(gcarc_pair)
+                dist_pair_round = round(dist_pair)
+                baz_pair = trZ_data_file[0].stats.sac.baz
+                #-------------------------------------------------------------------------------------------------------------------------------
+                # Calculating Hilbert transform of vertical trace data
+                trZ_H_data_filtered = np.imag(hilbert(trZ_data_filtered))
+                    
+                #-------------------------------------------------------------------------------------------------------------------------------
+                signal_window = (trZ_time >= TIME_START_P_REGIONAL) & (trZ_time <= TIME_FINAL_P_REGIONAL)
+                noise_window = (trZ_time < TIME_START_P_REGIONAL) != (trZ_time > TIME_FINAL_P_REGIONAL)
+                noise_rotated = tr1_data_filtered[noise_window].std()
+
+                tr2 = tr2_data_filtered[signal_window]
+                tr1 = tr1_data_filtered[signal_window]
+                trZ = trZ_data_filtered[signal_window]
+
+                # Calculate Hilbert transform of vertical trace data
+                trZ_H = np.imag(hilbert(trZ))
+
+                # Rotate through and find max normalized covariance
+                dphi = 0.1
+                ang = np.arange(0., 360., dphi)
+                ang_arr = np.zeros(len(ang))
+
+                cc1 = np.zeros(len(ang))
+                cc2 = np.zeros(len(ang))
+                cc3 = np.zeros(len(ang))
+
+                SNR_rotate = np.zeros(len(ang))
+
+                for k, a in enumerate(ang):
+                    R, T = rotate_ne_rt(tr1, tr2, a)
+                    covmat = np.corrcoef(R, trZ_H)
+                    cc1[k] = covmat[0,1]
+                    cstar = np.cov(trZ_H, R)/np.cov(trZ_H)
+                    cc2[k] = cstar[0,1]
+                    cstar=np.cov(trZ_H, T)/np.cov(trZ_H)
+                    cc3[k] = cstar[0,1]
+                    SNR_rotate[k] = np.abs(R).max()/noise_rotated
+
+                # Get argument of maximum of cc:
+                ia = cc2.argmax()
+        
+                # Get azimuth and correct for angles above 360
+                phi = (baz_pair - (360 - ia*dphi))
+                
+                if phi<0: phi+=360
+                if phi>=360: phi-=360
+                phi = ang[ia]
+                # Get argument of maximum coherence (R_zr):
+                cc1_max = cc1.max()
+                cc2_max = cc2.max()
+                cc3_max = cc3.max()
+                SNR_rotate_max = SNR_rotate.max()
+
+                OBS_orientation.append(ang[ia])
+                OBS_cc1_max.append(cc1_max)
+                OBS_SRN.append(SNR_rotate_max)
+
+                
+            # ----------------------------------------------------------------------------------------------------
+            # Creating a Pandas DataFrame:
+            column_info = [dist_pair[0],loc_sta1[0],loc_sta2[0]]
+            for i in column_info:
+                data_drift_lst.append(i)
+
+            columns_headers1 = ['distance','loc_sta1','loc_sta2']
+            for i in columns_headers1:
+                columns_headers.append(i)
+
+
+            clock_drift_df = pd.DataFrame(data_drift_lst, index=columns_headers).T
+
+            # ----------------------------------------------------------------------------------------------------
+            # Convert from pandas to Arrow and saving in feather formart file
+            os.makedirs(FEATHER_FILES,exist_ok=True)
+            file_feather_name = FEATHER_FILES+pair_sta_1+'.'+pair_sta_2+'_clock_drift_data.feather'
+            feather.write_feather(clock_drift_df, file_feather_name)
+            # ----------------------------------------------------------------------------------------------------
+
+            
+            if VERBOSE == True:
+
+                # --------------------
+                # fig CrossCorrelation
+                fig = plt.figure(figsize=(20, 10))
+                fig.suptitle('Evento: '+event_name+' (Δ:'+str(gcarc_pair_round)+'°)',fontsize=20)
+
+                gs = gridspec.GridSpec(3, 2,wspace=0.2, hspace=0.5)
+
+                new_R, new_T = rotate_ne_rt(tr1_data_filtered, tr2_data_filtered, phi)
+
+                ax1 = fig.add_subplot(gs[0,0])
+                ax1.plot(trZ_time,new_T,'-k')
+                ax1.set_ylabel('$C_{tz}$')
+                ax1.set_xlabel('Timelag (s)')
+                ax1.axvline(x=TIME_START_P_REGIONAL, ymin=0, ymax=1,color='gray',linestyle='--',lw=1)
+                ax1.axvline(x=TIME_FINAL_P_REGIONAL, ymin=0, ymax=1,color='gray',linestyle='--',lw=1)
+
+                ax2 = fig.add_subplot(gs[1,0], sharey=ax1, sharex=ax1)
+                ax2.plot(trZ_time,new_R,'-k')
+                ax2.plot(trZ_time,trZ_H_data_filtered,'--r')
+                ax2.set_ylabel('$C_{rz}$')
+                ax2.set_xlabel('Timelag (s)')
+                ax2.axvline(x=TIME_START_P_REGIONAL, ymin=0, ymax=1,color='gray',linestyle='--',lw=1)
+                ax2.axvline(x=TIME_FINAL_P_REGIONAL, ymin=0, ymax=1,color='gray',linestyle='--',lw=1)
+
+                ax3 = fig.add_subplot(gs[2,0], sharey=ax1, sharex=ax1)
+                ax3.plot(trZ_time,trZ_data_filtered,'-k')
+                ax3.set_ylabel('$C_{zz}$')
+                ax3.set_xlabel('Timelag (s)')
+                ax3.axvline(x=TIME_START_P_REGIONAL, ymin=0, ymax=1,color='gray',linestyle='--',lw=1)
+                ax3.axvline(x=TIME_FINAL_P_REGIONAL, ymin=0, ymax=1,color='gray',linestyle='--',lw=1)
+
+                ax4 = fig.add_subplot(gs[0,1])
+                ax4.plot(ang,cc1,'--k')
+                ax4.plot(phi,cc1_max,'*r')
+                ax4.set_ylabel('$R_{rz}$')
+                ax4.set_xlabel('Orientation Angle (deg)')
+
+                ax5 = fig.add_subplot(gs[1,1], sharex=ax4)
+                ax5.plot(ang,cc2,'--k')
+                ax5.plot(phi,cc2_max,'*r')
+                ax5.set_ylabel('$S_{rz}$')
+                ax5.set_xlabel('Orientation Angle (deg)')
+
+                ax6 = fig.add_subplot(gs[2,1])
+                ax6.plot(ang,SNR_rotate,'--k')
+                ax6.plot(phi,SNR_rotate_max,'*r')
+                ax6.set_ylabel('SNR')
+                ax6.set_xlabel('Orientation Angle (deg)')
+
+                if (cc1_max >= CC_MIN) & (SNR_rotate_max >= SNR_MIN):
+                    label = 'good'
+                else:
+                    label = 'bad'
+                output_figure_ORIENTATION = ORIENTATION_OUTPUT+'ORIENTATION_FIGURES/EARTHQUAKES/'+iOBS+'/'
+                os.makedirs(output_figure_ORIENTATION,exist_ok=True)
+                fig.savefig(output_figure_ORIENTATION+'ORIENTATION_'+event_name+'_'+label+'.png',dpi=300)
+                plt.close()
+            except:
+                pass
     #Creating the figure
     fig = plt.figure(figsize=(10, 10))
     fig.suptitle(iOBS,fontsize=20)
