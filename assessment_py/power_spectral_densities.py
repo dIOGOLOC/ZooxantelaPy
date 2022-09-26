@@ -82,7 +82,7 @@ def calc_PSD(file):
     time_data_hour = '{:02}'.format(time_data.hour)
     time_data_minute = '{:02}'.format(time_data.minute)
 
-    inv = obspy.read_inventory(XML_FILE+'ON.'+sta_name+'.xml')
+    inv = obspy.read_inventory(XML_FILE+NETWORK_CODE+'.'+sta_name+'.xml')
 
     if sta_channel == 'HHX':
         ppsd = PPSD(l.stats,inv,special_handling='hydrophone')

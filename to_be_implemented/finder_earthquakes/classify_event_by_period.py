@@ -65,7 +65,7 @@ from obspy.signal.trigger import classic_sta_lta, trigger_onset, coincidence_tri
 
 #MSEED_FOLDER = '/media/diogoloc/Backup/dados_posdoc/ON_MAR/obs_data_MSEED/'
 #MSEED_FOLDER = '/home/diogoloc/dados_posdoc/ON_MAR/RSBR_OBS_DATA/'
-MSEED_FOLDER = '/home/diogoloc/dados_posdoc/ON_MAR/obs_data_MSEED/'
+MSEED_FOLDER = '/home/diogoloc/dados_posdoc/ON_MAR/RSBR_OBS_DATA/'
 
 #EARTHQUAKE_FINDER_OUTPUT = '/media/diogoloc/Backup/dados_posdoc/ON_MAR/EARTHQUAKE_FINDER_NETWORK_OUTPUT/FIGURAS/'
 EARTHQUAKE_FINDER_OUTPUT = '/home/diogoloc/dados_posdoc/ON_MAR/EARTHQUAKE_FINDER_NETWORK_OUTPUT/FIGURAS/'
@@ -84,14 +84,12 @@ BINARY_FILES = '/home/diogoloc/dados_posdoc/ON_MAR/EARTHQUAKE_FINDER_NETWORK_OUT
 # ==========
 
 #Bandpass frequency (Hz) - minimum and maximum
-FILTER_DATA = [4,16]
-
-NETWORK = 'ON'
-
-OBS_NAME = ['OBS17','OBS18']
+FILTER_DATA = [4,20]
 
 CHANNEL = 'HHZ'
 
+STATIONS_LST = ['OBS17','OBS18','OBS20','OBS22']
+#'DUB01','VAS01','CAM01',
 # =========
 # Constants
 # =========
@@ -106,8 +104,8 @@ ONEDAY = datetime.timedelta(days=1)
 # Filtering by date
 # =================
 
-FIRSTDAY = '2019,12,07,00'
-LASTDAY = '2019,12,08,00'
+FIRSTDAY = '2019,12,10,00'
+LASTDAY = '2019,12,11,00'
 
 fday = UTCDateTime(FIRSTDAY)
 lday = UTCDateTime(LASTDAY)
@@ -129,27 +127,32 @@ print('Loading events files retrieved by LTA/STA procedure')
 print('===================================================')
 print('\n')
 
-xml_files = sorted(glob.glob(STATIONXML_DIR+'ON.OBS*'))
+xml_files = sorted(glob.glob(STATIONXML_DIR+'*'))
 inv = read_inventory(xml_files[0])
 for xml_file in xml_files[1:]:
 	inv.extend(read_inventory(xml_file))
-	print(xml_file)
+print(inv)
 
 #----------------------------------------------------------------------------
 
 for iperid,period_date in enumerate(tqdm(INTERVAL_PERIOD_DATE,desc='File loop')):
     obs_day_files = glob.glob(MSEED_FOLDER+'**/**/**/**/*'+str(period_date))
 
+
     print(period_date)
 
     st = Stream()
     for file in obs_day_files:
-        if 'HHX' not in file and 'OBS19' not in file and 'OBS22' not in file and 'OBS20' not in file:
+        #if file.split('/')[-1].split('.')[1] in STATIONS_LST and CHANNEL in file:    
+        #if file.split('/')[-1].split('.')[1] in STATIONS_LST and 'HHX' not in file:    
+        if file.split('/')[-1].split('.')[1] in STATIONS_LST:    
+        #if 'HHX' not in file and 'OBS19' not in file and 'OBS22' not in file and 'OBS20' not in file:
         #if 'HHX' not in file and 'OBS19' not in file:
-        #if 'HHX' in file:
+        #if 'OBS19' not in file:
+        #if 'HHX' in file  and 'OBS19' not in file:
             st.append(read(file)[0])
 
     st.trim(starttime=INTERVAL_PERIOD[iperid], endtime=INTERVAL_PERIOD[iperid]+HOUR12)
-    st.filter("bandpass", freqmin=FILTER_DATA[0], freqmax=FILTER_DATA[1])
+    #st.filter("bandpass", freqmin=FILTER_DATA[0], freqmax=FILTER_DATA[1])
     # Start the Snuffler
     st.fiddle(inventory=inv)

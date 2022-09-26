@@ -1,0 +1,34 @@
+name = ev_margem_cont_PR
+time = 2019-10-22 06:15:47.0
+latitude = -25.28
+longitude = -45.38
+magnitude = 2.9 
+catalog = usp2019urqh
+--------------------------------------------
+name = ev_margem_cont_sp
+time = 2019-12-07 12:18:54.0
+latitude = -24.75
+longitude = -44.25
+magnitude = 2.9 
+catalog = usp2019xydk
+--------------------------------------------
+name = ev_margem_cont_RJ
+time = 2020-01-14 23:19:00
+latitude = -24.49
+longitude = -43.97
+magnitude = 2.7 
+catalog = usp2020aznr
+--------------------------------------------
+name = ev_margem_cont_PR
+time = 2019-10-27 07:20:11.0
+latitude = -25.34
+longitude = -43.01
+magnitude = 2.5 
+catalog = usp2019vavy
+--------------------------------------------
+name = ev_margem_cont_sp
+time = 2020-03-25 11:30:39.0
+latitude = -24.54
+longitude = -41.93
+magnitude = 4.2
+catalog = usp2020fyjb

@@ -345,7 +345,7 @@ def plot_map_event_data(event_lstZ,event_lstN,event_lstE,event_name,folder_name,
 		URCRNRLAT_LARGE = -12
 
 		# Create a Stamen Terrain instance.
-		stamen_terrain = cimgt.StamenTerrain()
+		stamen_terrain = cimgt.Stamen('terrain-background')
 
 		# Add the Stamen data at zoom level 8.
 		map_loc.add_image(stamen_terrain, 10)
@@ -724,7 +724,7 @@ def plot_map_event_data_hydrophone(event_lstX,event_name,folder_name,lf,hf):
 		URCRNRLAT_LARGE = -12
 
 		# Create a Stamen Terrain instance.
-		stamen_terrain = cimgt.StamenTerrain()
+		stamen_terrain = cimgt.Stamen('terrain-background')
 
 		# Add the Stamen data at zoom level 8.
 		map_loc.add_image(stamen_terrain, 10)

@@ -58,25 +58,20 @@ from obspy.signal.trigger import classic_sta_lta, trigger_onset, coincidence_tri
 # Configuration file
 # ====================================================================================================
 
-MSEED_DIR_OBS = '/media/diogoloc/Backup/dados_posdoc/ON_MAR/obs_data_MSEED/data/'
+MSEED_DIR_STA = '/home/diogoloc/dados_posdoc/ON_MAR/RSBR_OBS_DATA/'
 
-MSEED_DIR_STA = '/media/diogoloc/Backup/dados_posdoc/ON_MAR/RSBR_data/data/'
+STATIONXML_DIR = '/home/diogoloc/dados_posdoc/ON_MAR/XML_ON_OBS_CC/'
 
-STATIONXML_DIR = '/media/diogoloc/Backup/dados_posdoc/ON_MAR/XML_ON_OBS_CC/'
+EARTHQUAKE_FINDER_OUTPUT = '/home/diogoloc/dados_posdoc/ON_MAR/EARTHQUAKE_FINDER_NETWORK_OUTPUT/'
 
-EARTHQUAKE_FINDER_OUTPUT = '/home/diogoloc/dados_posdoc/ON_MAR/EARTHQUAKE_FINDER_NETWORK_OUTPUT/FIGURAS/'
+FIRSTDAY = '2019-12-06'
+LASTDAY = '2019-12-08'
 
-ASDF_FILES = '/home/diogoloc/dados_posdoc/ON_MAR/EARTHQUAKE_FINDER_NETWORK_OUTPUT/ASDF_FILES/'
+FILTER_DATA = [3,5]
 
-FIRSTDAY = '2019-08-01'
-LASTDAY = '2020-07-01'
-
-FILTER_DATA = [2,45]
-
-NETWORK = 'ON'
-
-STATIONS_LST = ['DUB01','VAS01']
-OBSS_LST = ['OBS17','OBS18','OBS20','OBS22']
+#STATIONS_LST = ['DUB01','VAS01','CAM01','ALF01','RIB01','ABR01','SLP01']
+STATIONS_LST = ['DUB01','VAS01','CAM01','ALF01','RIB01','ABR01','SLP01','OBS17','OBS18','OBS20','OBS22']
+#OBSS_LST = ['OBS17','OBS18','OBS20','OBS22']
 
 CHANNEL = 'HHZ'
 
@@ -89,8 +84,6 @@ LTA = 60
 
 THRON = 3
 THROFF = 2
-
-EVENT_LENGTH_MIN = 1.0
 
 PEM = 5
 PET = 10
@@ -134,11 +127,11 @@ def filelist(basedir,interval_period_date):
     files = []
     files_list = glob.glob(basedir+'/*')
     for s in files_list:
-    	if any(day_s in s for day_s in interval_period_date):
-    		files.append(s)
-
+        if any(day_s in s for day_s in interval_period_date):
+            files.append(s)
+            
     files = [i for i in files if CHANNEL in i]
-
+    
     return sorted(files)
 
 #-------------------------------------------------------------------------------
@@ -238,10 +231,10 @@ def find_events(input_list_FIND_EVENT):
                         try:
 
                             #Creating ASDF preprocessed files folder
-                            output_EVENT_DATA = ASDF_FILES+'EVENT_DATA_FILES/'+NETWORK+'/'+NETWORK+'_'+st_selected_time.strftime('%Y_%m_%d_%H_%M_%S_%f')+'/'
+                            output_EVENT_DATA = EARTHQUAKE_FINDER_OUTPUT+str(FILTER_DATA[0])+'_'+str(FILTER_DATA[1])+'Hz/ASDF_FILES/EVENT_DATA_FILES/'+network+'_'+st_selected_time.strftime('%Y_%m_%d_%H_%M_%S_%f')+'/'
                             os.makedirs(output_EVENT_DATA,exist_ok=True)
 
-                            event_asdf = ASDFDataSet(output_EVENT_DATA+'EVENT_DATA_'+NETWORK+'_'+traces.stats.station+'_'+traces.stats.channel+'_'+traces.stats.starttime.strftime('%Y_%m_%d_%H_%M_%S_%f')+"_event.h5", compression="gzip-3")
+                            event_asdf = ASDFDataSet(output_EVENT_DATA+'EVENT_DATA_'+network+'_'+traces.stats.station+'_'+traces.stats.channel+'_'+traces.stats.starttime.strftime('%Y_%m_%d_%H_%M_%S_%f')+"_event.h5", compression="gzip-3")
                             tr_2_save = traces
                             event_asdf.add_waveforms(tr_2_save, tag="event_recording")
                             #----------------------------------------------------------------------------
@@ -299,9 +292,9 @@ def find_events(input_list_FIND_EVENT):
                         except:
                             pass
 
-                    daily_event_output = EARTHQUAKE_FINDER_OUTPUT+'/Daily_event_data_windows/'+'/'+st_selected_time.strftime('%Y-%m-%d')+'/'
+                    daily_event_output = EARTHQUAKE_FINDER_OUTPUT+str(FILTER_DATA[0])+'_'+str(FILTER_DATA[1])+'Hz/Daily_event_data_windows/'+'/'+st_selected_time.strftime('%Y-%m-%d')+'/'
                     os.makedirs(daily_event_output,exist_ok=True)
-                    fig.savefig(daily_event_output+NETWORK+'_'+st_selected_time.strftime('%Y_%m_%d_%H_%M_%S_%f')+'.png', dpi=300, facecolor='w', edgecolor='w')
+                    fig.savefig(daily_event_output+network+'_'+st_selected_time.strftime('%Y_%m_%d_%H_%M_%S_%f')+'.png', dpi=300, facecolor='w', edgecolor='w')
                     plt.close()
 
 # ============
@@ -322,26 +315,13 @@ for sta in STATIONS_LST:
 print('Total of INLAND stations = '+str(len(lst_INLAND2)))
 lst_INLAND = [item for sublist in lst_INLAND2 for item in sublist]
 
-lst_OBS1 = sorted(glob.glob(MSEED_DIR_OBS+'/*/*/*'))
-lst_OBS2 = []
-for sta in OBSS_LST:
-    lst_OBS2.append([i for i in lst_OBS1 if sta in i])
-print('Total of OBS stations = '+str(len(lst_OBS2)))
-lst_OBS = [item for sublist in lst_OBS2 for item in sublist]
-
-
 # Using filelist function for selecting files inside the time interval settled
 files_INLAND = []
 for i,j in enumerate(lst_INLAND):
     files_INLAND.append(filelist(basedir=j+'/'+CHANNEL+'.D/',interval_period_date=INTERVAL_PERIOD_DATE))
 
-files_OBS = []
-for i,j in enumerate(lst_OBS):
-    files_OBS.append(filelist(basedir=j+'/'+CHANNEL+'.D/',interval_period_date=INTERVAL_PERIOD_DATE))
-
-
 # Merging the files according the time:
-files_INTERVAL_PERIOD_DATE_INLAND = []
+files_INTERVAL_PERIOD_DATE = []
 for i,j in enumerate(INTERVAL_PERIOD_DATE):
     temp2 = []
     for k in files_INLAND:
@@ -349,22 +329,7 @@ for i,j in enumerate(INTERVAL_PERIOD_DATE):
         temp2.append(temp1)
     temp = filter(lambda x: len(x) > 0, temp2)
     flat_list = [item for sublist in temp for item in sublist]
-    files_INTERVAL_PERIOD_DATE_INLAND.append(list(flat_list))
-
-files_INTERVAL_PERIOD_DATE_OBS = []
-for i,j in enumerate(INTERVAL_PERIOD_DATE):
-    temp2 = []
-    for k in files_OBS:
-        temp1 = [w for w in k if j in w]
-        temp2.append(temp1)
-    temp = filter(lambda x: len(x) > 0, temp2)
-    flat_list = [item for sublist in temp for item in sublist]
-    files_INTERVAL_PERIOD_DATE_OBS.append(list(flat_list))
-
-files_INTERVAL_PERIOD_DATE = []
-for i,j in enumerate(files_INTERVAL_PERIOD_DATE_INLAND):
-    files_INTERVAL_PERIOD_DATE.append(files_INTERVAL_PERIOD_DATE_INLAND[i]+ files_INTERVAL_PERIOD_DATE_OBS[i])
-
+    files_INTERVAL_PERIOD_DATE.append(list(flat_list))
 
 print('\n')
 print('==============')
@@ -388,10 +353,10 @@ for i,j in enumerate(files_INTERVAL_PERIOD_DATE):
         input_list_FIND_EVENT.append([st,INTERVAL_PERIOD_WINDOW_START[k],INTERVAL_PERIOD_WINDOW_END[k]])
 
     with Pool(processes=num_processes) as p:
-    	max_ = len(input_list_FIND_EVENT)
-    	with tqdm(total=max_, desc='Slice loop') as pbar:
-    		for i, _ in enumerate(p.imap_unordered(find_events, input_list_FIND_EVENT)):
-    			pbar.update()
+        max_ = len(input_list_FIND_EVENT)
+        with tqdm(total=max_, desc='Slice loop') as pbar:
+            for i, _ in enumerate(p.imap_unordered(find_events, input_list_FIND_EVENT)):
+                pbar.update()
 
 print("--- %.2f execution time (min) ---" % ((time.time() - start_time)/60))
 print('\n')

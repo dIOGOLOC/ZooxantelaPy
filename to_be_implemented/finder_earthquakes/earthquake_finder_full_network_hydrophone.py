@@ -58,16 +58,16 @@ from obspy.signal.trigger import classic_sta_lta, trigger_onset, coincidence_tri
 # Configuration file
 # ====================================================================================================
 
-MSEED_DIR_OBS = '/home/diogoloc/dados_posdoc/ON_MAR/obs_data_MSEED/'
+MSEED_DIR_OBS = '/home/diogoloc/dados_posdoc/ON_MAR/RSBR_OBS_DATA/'
 
 EARTHQUAKE_FINDER_OUTPUT = '/home/diogoloc/dados_posdoc/ON_MAR/EARTHQUAKE_FINDER_NETWORK_HYDROPHONE_OUTPUT/FIGURAS/'
 
 ASDF_FILES = '/home/diogoloc/dados_posdoc/ON_MAR/EARTHQUAKE_FINDER_NETWORK_HYDROPHONE_OUTPUT/ASDF_FILES/'
 
-FIRSTDAY = '2019-08-01'
-LASTDAY = '2019-12-31'
+FIRSTDAY = '2019-12-06'
+LASTDAY = '2019-12-08'
 
-FILTER_DATA = [2,16]
+FILTER_DATA = [3,5]
 
 NETWORK = 'ON'
 
@@ -78,12 +78,10 @@ WINDOW_LENGTH = 600
 VERBOSE_MODE = True
 
 STA = 1
-LTA = 60
+LTA = 30
 
 THRON = 3
 THROFF = 2
-
-EVENT_LENGTH_MIN = 1.0
 
 PEM = 5
 PET = 5
@@ -307,7 +305,7 @@ print('\n')
 
 # initializing list of stations by scanning name of miniseed files
 
-lst_OBS = glob.glob(MSEED_DIR_OBS+NETWORK+'/*')
+lst_OBS = sorted(glob.glob(MSEED_DIR_OBS+'/*/*/*'))
 print('Total of OBS stations = '+str(len(lst_OBS)))
 
 files_OBS = []

@@ -105,7 +105,7 @@ TIME_OF_WEEKDAY_FINAL_HOUR = 24
 
 #Extracting PSD values for given period in seconds.
 #Selects the period bin whose center period is closest to the specified period.
-PERIOD_PSD = 10
+PERIOD_PSD = 0.25
 
 #Maximum and minimum amplitude of the PSD (sensor).
 AMP_PSD_MIN = -120
