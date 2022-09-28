@@ -64,8 +64,8 @@ from obspy.signal.trigger import classic_sta_lta, trigger_onset, coincidence_tri
 # ========================
 
 #MSEED_FOLDER = '/media/diogoloc/Backup/dados_posdoc/ON_MAR/obs_data_MSEED/'
+MSEED_FOLDER = '/home/diogoloc/dados_posdoc/ON_MAR/obs_data_MSEED/'
 #MSEED_FOLDER = '/home/diogoloc/dados_posdoc/ON_MAR/RSBR_OBS_DATA/'
-MSEED_FOLDER = '/home/diogoloc/dados_posdoc/ON_MAR/RSBR_OBS_DATA/'
 
 #EARTHQUAKE_FINDER_OUTPUT = '/media/diogoloc/Backup/dados_posdoc/ON_MAR/EARTHQUAKE_FINDER_NETWORK_OUTPUT/FIGURAS/'
 EARTHQUAKE_FINDER_OUTPUT = '/home/diogoloc/dados_posdoc/ON_MAR/EARTHQUAKE_FINDER_NETWORK_OUTPUT/FIGURAS/'
@@ -89,7 +89,7 @@ FILTER_DATA = [4,20]
 CHANNEL = 'HHZ'
 
 STATIONS_LST = ['OBS17','OBS18','OBS20','OBS22']
-#'DUB01','VAS01','CAM01',
+
 # =========
 # Constants
 # =========
@@ -104,8 +104,8 @@ ONEDAY = datetime.timedelta(days=1)
 # Filtering by date
 # =================
 
-FIRSTDAY = '2019,12,10,00'
-LASTDAY = '2019,12,11,00'
+FIRSTDAY = '2020,03,25,00'
+LASTDAY = '2020,03,26,00'
 
 fday = UTCDateTime(FIRSTDAY)
 lday = UTCDateTime(LASTDAY)
@@ -143,9 +143,9 @@ for iperid,period_date in enumerate(tqdm(INTERVAL_PERIOD_DATE,desc='File loop'))
 
     st = Stream()
     for file in obs_day_files:
-        #if file.split('/')[-1].split('.')[1] in STATIONS_LST and CHANNEL in file:    
-        #if file.split('/')[-1].split('.')[1] in STATIONS_LST and 'HHX' not in file:    
-        if file.split('/')[-1].split('.')[1] in STATIONS_LST:    
+        #if file.split('/')[-1].split('.')[1] in STATIONS_LST and CHANNEL in file:
+        #if file.split('/')[-1].split('.')[1] in STATIONS_LST and 'HHX' not in file:
+        if file.split('/')[-1].split('.')[1] in STATIONS_LST:
         #if 'HHX' not in file and 'OBS19' not in file and 'OBS22' not in file and 'OBS20' not in file:
         #if 'HHX' not in file and 'OBS19' not in file:
         #if 'OBS19' not in file:

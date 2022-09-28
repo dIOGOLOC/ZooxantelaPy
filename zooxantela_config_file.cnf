@@ -46,9 +46,9 @@ LABEL_LANG = en
 #======
 
 # directory of raw files
-DIR_DATA = /home/diogoloc/dados_posdoc/ON_MAR/RSBR_OBS_DATA/
+#DIR_DATA = /home/diogoloc/dados_posdoc/ON_MAR/RSBR_OBS_DATA/
 #DIR_DATA = /run/user/1000/gvfs/smb-share:server=hatabackup.local,share=dados_posdoc/ON_MAR/data/
-#DIR_DATA = /home/diogoloc/dados_posdoc/ON_MAR/obs_data_MSEED/
+DIR_DATA = /home/diogoloc/dados_posdoc/ON_MAR/obs_data_MSEED/
 
 # directory of raw status files
 DIR_STATUS = /home/diogoloc/dados_posdoc/ON_MAR/obs_data/STATUS_FILE/
@@ -105,7 +105,7 @@ TIME_OF_WEEKDAY_FINAL_HOUR = 24
 
 #Extracting PSD values for given period in seconds.
 #Selects the period bin whose center period is closest to the specified period.
-PERIOD_PSD = 0.25
+PERIOD_PSD = 0.125
 
 #Maximum and minimum amplitude of the PSD (sensor).
 AMP_PSD_MIN = -120

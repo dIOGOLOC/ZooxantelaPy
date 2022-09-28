@@ -49,7 +49,6 @@ import cartopy.crs as ccrs
 from cartopy.io.shapereader import Reader
 import cartopy.feature as cfeature
 
-from pyasdf import ASDFDataSet
 from obspy.signal.trigger import classic_sta_lta, trigger_onset, coincidence_trigger,recursive_sta_lta
 
 # ====================================================================================================
@@ -62,16 +61,18 @@ STATIONXML_DIR = '/home/diogoloc/dados_posdoc/ON_MAR/XML_OBS/'
 
 EARTHQUAKE_FINDER_OUTPUT = '/home/diogoloc/dados_posdoc/ON_MAR/EARTHQUAKE_FINDER_OUTPUT/DAYPLOT_FIGURAS/'
 
-FIRSTDAY = '2019-12-01'
-LASTDAY = '2019-12-15'
+FIRSTDAY = '2019-07-01'
+LASTDAY = '2020-07-31'
 
-FILTER_DATA = [3,5]
+FILTER_DATA = [4,14]
 
 NETWORK = 'ON'
 
-STATION = 'OBS22'
+STATION = 'OBS17'
 
-CHANNEL = 'HHX'
+CHANNEL = 'HHZ'
+
+SCALING_RAGE = 1e3
 
 # ========================
 # Constants and parameters
@@ -86,7 +87,7 @@ ONEDAY = datetime.timedelta(days=1)
 # ================
 # MULTIPROCESSING
 # ================
-num_processes = 4
+num_processes = 8
 
 # =================
 # Filtering by date
@@ -111,7 +112,7 @@ def filelist(basedir,interval_period_date):
     for s in files_list:
         if any(day_s in s for day_s in interval_period_date):
             files.append(s)
-            
+
     files = [i for i in files if CHANNEL in i]
 
     return sorted(files)
@@ -140,14 +141,14 @@ def get_stations_data(f):
     julday_day = time_day.split('.')[1]
     st = read(f)
 
-    st.filter("bandpass", freqmin=3, freqmax=5)
-    
+    st.filter("bandpass", freqmin=FILTER_DATA[0], freqmax=FILTER_DATA[1])
+
     #-----------------------------------------------------
-    daily_wind_output = EARTHQUAKE_FINDER_OUTPUT+NETWORK+'.'+STATION+'/'
+    daily_wind_output = EARTHQUAKE_FINDER_OUTPUT+NETWORK+'.'+STATION+'.'+CHANNEL+'_'+str(FILTER_DATA[0])+'_'+str(FILTER_DATA[1])+'Hz/'
     os.makedirs(daily_wind_output,exist_ok=True)
     outfile_name = daily_wind_output+NETWORK+'_'+STATION+'_'+CHANNEL+'_'+year_day+'_'+julday_day+'.png'
 	#------------------------------------------------------------------
-    st.plot(outfile=outfile_name,type="dayplot",title=sta_channel_id+'('+st[0].stats.starttime.strftime("%d/%m/%Y")+')', interval=60, right_vertical_labels=True,vertical_scaling_range=1e4, one_tick_per_line=True,color='k', show_y_UTC_label=True)
+    st.plot(outfile=outfile_name,type="dayplot",title=sta_channel_id+'('+st[0].stats.starttime.strftime("%d/%m/%Y")+')', interval=60, right_vertical_labels=True,vertical_scaling_range=SCALING_RAGE, one_tick_per_line=True,color='k', show_y_UTC_label=True)
 
 # ============
 # Main program

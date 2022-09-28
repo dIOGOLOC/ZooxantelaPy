@@ -61,7 +61,7 @@ import matplotlib.pyplot as plt
 from assessment_py.power_spectral_densities import plot_PPSD_by_period_sensor,plot_PPSD_by_period_hydrophone
 
 from parameters_py.config import (
-					OUTPUT_FIGURE_DIR,DIR_DATA,DIR_STATUS,NUM_PROCESS,OUTPUT_PSD_DIR
+					OUTPUT_FIGURE_DIR,DIR_DATA,DIR_STATUS,NUM_PROCESS,OUTPUT_PSD_DIR,LABEL_LANG
 					)
 
 

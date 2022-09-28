@@ -61,7 +61,7 @@ from obspy.core.util import AttribDict
 from parameters_py.config import (
 					OUTPUT_FIGURE_DIR,DIR_DATA,XML_FILE,OUTPUT_PSD_DIR,INITIAL_DATE,FINAL_DATE,
 					TIME_OF_WEEKDAY_DAY, TIME_OF_WEEKDAY_START_HOUR, TIME_OF_WEEKDAY_FINAL_HOUR,
-                    PERIOD_PSD,AMP_PSD_MIN,AMP_PSD_MAX,AMP_PSD_HYDROPHONE_MIN,AMP_PSD_HYDROPHONE_MAX
+                    PERIOD_PSD,AMP_PSD_MIN,AMP_PSD_MAX,AMP_PSD_HYDROPHONE_MIN,AMP_PSD_HYDROPHONE_MAX,LABEL_LANG
 				   )
 
 # ====================================
@@ -327,7 +327,7 @@ def plot_PPSD_by_period_sensor(directory_data):
 
             data_x_axis = check_datetime_in_period(datetime_lista,df_ch['DATETIME'],df_ch['AMPLITUDE_HOUR'])
 
-            im = ax[k].imshow(data_x_axis,extent = [xlim_initial,xlim_final,0,24],cmap=plt.cm.viridis,interpolation=None,vmin=AMP_PSD_MIN,vmax=AMP_PSD_MAX)
+            im = ax[k].imshow(data_x_axis,extent = [xlim_initial,xlim_final,0,24],cmap=plt.cm.twilight_shifted,interpolation=None,vmin=AMP_PSD_MIN,vmax=AMP_PSD_MAX)
             ax[k].set_xlim(datetime.datetime(obspy.UTCDateTime(INITIAL_DATE).year,obspy.UTCDateTime(INITIAL_DATE).month,obspy.UTCDateTime(INITIAL_DATE).day),datetime.datetime(obspy.UTCDateTime(FINAL_DATE).year,obspy.UTCDateTime(FINAL_DATE).month,obspy.UTCDateTime(FINAL_DATE).day))
             ax[k].yaxis.set_major_locator(MultipleLocator(4))
             ax[k].yaxis.set_minor_locator(MultipleLocator(1))
@@ -499,7 +499,7 @@ def plot_PPSD_by_period_hydrophone(directory_data):
 
         data_x_axis = check_datetime_in_period(datetime_lista,df_ch['DATETIME'],df_ch['AMPLITUDE_HOUR'])
 
-        im = ax.imshow(data_x_axis,extent = [xlim_initial,xlim_final,0,24],cmap=plt.cm.viridis,interpolation=None,vmin=AMP_PSD_HYDROPHONE_MIN,vmax=AMP_PSD_HYDROPHONE_MAX)
+        im = ax.imshow(data_x_axis,extent = [xlim_initial,xlim_final,0,24],cmap=plt.cm.twilight_shifted,interpolation=None,vmin=AMP_PSD_HYDROPHONE_MIN,vmax=AMP_PSD_HYDROPHONE_MAX)
         ax.set_xlim(datetime.datetime(obspy.UTCDateTime(INITIAL_DATE).year,obspy.UTCDateTime(INITIAL_DATE).month,obspy.UTCDateTime(INITIAL_DATE).day),datetime.datetime(obspy.UTCDateTime(FINAL_DATE).year,obspy.UTCDateTime(FINAL_DATE).month,obspy.UTCDateTime(FINAL_DATE).day))
         ax.yaxis.set_major_locator(MultipleLocator(4))
         ax.yaxis.set_minor_locator(MultipleLocator(1))
