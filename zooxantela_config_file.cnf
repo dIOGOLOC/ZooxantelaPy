@@ -103,9 +103,13 @@ TIME_OF_WEEKDAY_DAY = -1
 TIME_OF_WEEKDAY_START_HOUR = 0
 TIME_OF_WEEKDAY_FINAL_HOUR = 24
 
-#Extracting PSD values for given period in seconds.
+#Extracting PSD values for given period (Hz).
 #Selects the period bin whose center period is closest to the specified period.
-PERIOD_PSD = 0.125
+PERIOD_PSD = 8
+
+#Extracting PSD values for given bandpass (Hz).
+PERIOD_PSD_MIN = 7
+PERIOD_PSD_MAX = 9
 
 #Maximum and minimum amplitude of the PSD (sensor).
 AMP_PSD_MIN = -120

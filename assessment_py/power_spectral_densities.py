@@ -7,7 +7,7 @@ Function to estimate/plot probabilistic power spectral densities for each file
 Author: Diogo L.O.C. (locdiogo@gmail.com)
 
 
-Last Date: 02/2022
+Last Date: 11/2022
 
 
 Project: Monitoramento Sismo-Oceanográfico
@@ -61,7 +61,7 @@ from obspy.core.util import AttribDict
 from parameters_py.config import (
 					OUTPUT_FIGURE_DIR,DIR_DATA,XML_FILE,OUTPUT_PSD_DIR,INITIAL_DATE,FINAL_DATE,
 					TIME_OF_WEEKDAY_DAY, TIME_OF_WEEKDAY_START_HOUR, TIME_OF_WEEKDAY_FINAL_HOUR,
-                    PERIOD_PSD,AMP_PSD_MIN,AMP_PSD_MAX,AMP_PSD_HYDROPHONE_MIN,AMP_PSD_HYDROPHONE_MAX,LABEL_LANG
+                    PERIOD_PSD,PERIOD_PSD_MIN,PERIOD_PSD_MAX,AMP_PSD_MIN,AMP_PSD_MAX,AMP_PSD_HYDROPHONE_MIN,AMP_PSD_HYDROPHONE_MAX,LABEL_LANG
 				   )
 
 # ====================================
@@ -241,7 +241,7 @@ def plot_PPSD_by_period_sensor(directory_data):
             lst_time = []
             for x,c in enumerate(flat_time_lst):
                 if c.hour == h:
-                    lst_time.append(ppsd.extract_psd_values(PERIOD_PSD)[0][x])
+                    lst_time.append(ppsd.extract_psd_values(round(1/PERIOD_PSD,3))[0][x])
             time_flat_time_lst[g] = lst_time
 
         AMPLITUDE_HOUR = [[]]*24
@@ -362,7 +362,181 @@ def plot_PPSD_by_period_sensor(directory_data):
         cbar = fig.colorbar(im, cax=axins, orientation="horizontal", ticklocation='top',ticks=[AMP_PSD_MIN,np.mean([AMP_PSD_MIN,AMP_PSD_MAX]),AMP_PSD_MAX],label='Amplitude '+r'$[m^2/s^4/Hz][dB]$')
 
         os.makedirs(OUTPUT_FIGURE_DIR,exist_ok=True)
-        fig.savefig(OUTPUT_FIGURE_DIR+j+'_'+'PSD_BY_PERIOD_'+str(PERIOD_PSD)+'_'+str(obspy.UTCDateTime(INITIAL_DATE).year)+'_'+str(obspy.UTCDateTime(INITIAL_DATE).month)+'_'+str(obspy.UTCDateTime(INITIAL_DATE).day)+'_'+str(obspy.UTCDateTime(FINAL_DATE).year)+'_'+str(obspy.UTCDateTime(FINAL_DATE).month)+'_'+str(obspy.UTCDateTime(FINAL_DATE).day)+'.pdf',dpi=500)
+        fig.savefig(OUTPUT_FIGURE_DIR+j+'_'+'PSD_BY_PERIOD_'+str(round(1/PERIOD_PSD,3))+'_'+str(obspy.UTCDateTime(INITIAL_DATE).year)+'_'+str(obspy.UTCDateTime(INITIAL_DATE).month)+'_'+str(obspy.UTCDateTime(INITIAL_DATE).day)+'_'+str(obspy.UTCDateTime(FINAL_DATE).year)+'_'+str(obspy.UTCDateTime(FINAL_DATE).month)+'_'+str(obspy.UTCDateTime(FINAL_DATE).day)+'.pdf',dpi=500)
+
+
+def plot_PPSD_by_period_sensor_bandpass(directory_data):
+
+    data_lista = []
+    if LABEL_LANG == 'br':
+        print('Procurando por dados na pasta: '+directory_data)
+
+    else:
+        print('Looking for data in the directory: '+directory_data)
+
+    for root, dirs, files in os.walk(directory_data):
+        for name in files:
+            if name.endswith('.npz') and 'HHX' not in name:
+                data_lista.append(os.path.join(root, name))
+
+
+    data_lista = sorted(data_lista)
+
+    dataframe_lista = []
+    #create a empty dataframe with pandas
+    if LABEL_LANG == 'br':
+        print("Extraindo dados do cabeçalho do PPSD.")
+
+    else:
+        print("Extracting data from PPSD header.")
+
+
+    for j in tqdm(data_lista):
+        #Reading header from data
+        ppsd = PPSD.load_npz(j,allow_pickle=True)
+
+        #----------------------------
+        #Dataframe starting
+
+        network = ppsd.network
+        station = ppsd.station
+        channel = ppsd.channel
+
+        flat_time_lst = ppsd.times_processed
+
+        DATETIME = str(ppsd.times_data[0][0].year)+','+str(ppsd.times_data[0][0].month)+','+str(ppsd.times_data[0][0].day)
+
+        #Contador da lista de horas
+        time_flat_time_lst = [[]]*24
+        for g,h in enumerate(np.arange(24)):
+            lst_time = []
+            for x,c in enumerate(flat_time_lst):
+                if c.hour == h:
+                    print(round(1/PERIOD_PSD,3))
+                    psd_values, period_min, _, period_max = ppsd.extract_psd_values(round(1/PERIOD_PSD,3))
+                    label = "{:.2g}-{:.2g} [Hz]".format(1.0/period_max,1.0/period_min)
+                    print(label)
+                    #lst_time.append(ppsd.extract_psd_values(round(1/PERIOD_PSD,3))[0][x])
+                    lst_time.append(psd_values[x])
+            time_flat_time_lst[g] = lst_time
+
+        AMPLITUDE_HOUR = [[]]*24
+        for q,w in enumerate(time_flat_time_lst):
+            AMPLITUDE_HOUR[q] = np.mean(w)
+
+        dataframe_lista.append(pd.DataFrame([[network],[station],[channel],[DATETIME],[AMPLITUDE_HOUR]], index=['NETWORK', 'STATION', 'CHANNEL', 'DATETIME','AMPLITUDE_HOUR']).T)
+
+        #Dataframe ending
+        #----------------------------
+
+
+    df = pd.concat(dataframe_lista, ignore_index=True)
+
+    #Sorting according to station
+    station_lista = list(set(df['STATION']))
+
+    for i,j in enumerate(station_lista):
+        df_sta = df[df['STATION'] == j]
+
+        channel_lista = list(set(df_sta['CHANNEL']))
+        channel_lista = sorted(channel_lista)
+
+        # ==========================================================
+        # Calculating datetime between INITIAL_DATE and  FINAL_DATE
+        # ==========================================================
+
+        datatime_initial = datetime.datetime(obspy.UTCDateTime(INITIAL_DATE).year,obspy.UTCDateTime(INITIAL_DATE).month,obspy.UTCDateTime(INITIAL_DATE).day)
+
+        datatime_final = datetime.datetime(obspy.UTCDateTime(FINAL_DATE).year,obspy.UTCDateTime(FINAL_DATE).month,obspy.UTCDateTime(FINAL_DATE).day)
+
+        datetime_lista = np.arange(datatime_initial, datatime_final, datetime.timedelta(days=1)).astype(datetime.datetime)
+
+        xlim_initial = mdates.date2num(datatime_initial)
+        xlim_final = mdates.date2num(datatime_final)
+
+        #----------------------------
+        #Function to check if the dates in data set are inside the period chosen (INITIAL_DATE to FINAL_DATE)
+
+        def check_datetime_in_period(datetime_lst,df_DATETIME,df_AMPLITUDE_HOUR):
+
+            array_to_plot_by_xlim = []
+            for x,c in enumerate(datetime_lst):
+                lista_temp = []
+                for t,y in enumerate(df_DATETIME):
+                    if datetime.datetime(obspy.UTCDateTime(y).year,obspy.UTCDateTime(y).month,obspy.UTCDateTime(y).day) == c:
+                        lista_temp.append(df_AMPLITUDE_HOUR[df_DATETIME[df_DATETIME == y].index[0]])
+                array_to_plot_by_xlim.append(lista_temp)
+
+            data_x_axis = []
+            for x,c in enumerate(array_to_plot_by_xlim):
+                if c != []:
+                    data_x_axis.append(c[0][::-1])
+                else:
+                    data_x_axis.append(np.full_like(np.arange(24),np.nan,dtype=np.double))
+
+            data_x_axis = np.array(data_x_axis).T
+
+            return data_x_axis
+
+        # ====================================
+        # Function to plot DATA availability
+        # ====================================
+
+        #x axis parameters
+
+        days1 = DayLocator(interval=1)   # every day
+        days5 = DayLocator(interval=5)   # every day
+        months = MonthLocator()  # every month
+        yearsFmt = DateFormatter('%Y-%m-%d')
+
+        days1.MAXTICKS = 10000
+
+
+        #Matplotlib parameters
+        fig, ax = plt.subplots(nrows=len(channel_lista), ncols=1,sharex=True,sharey=True,figsize=(40,15))
+        fig.suptitle(j,fontsize=25,y=0.9)
+        for k,l in enumerate(channel_lista):
+
+            df_ch = df_sta[df_sta['CHANNEL'] == l]
+
+            data_x_axis = check_datetime_in_period(datetime_lista,df_ch['DATETIME'],df_ch['AMPLITUDE_HOUR'])
+
+            im = ax[k].imshow(data_x_axis,extent = [xlim_initial,xlim_final,0,24],cmap=plt.cm.twilight_shifted,interpolation=None,vmin=AMP_PSD_MIN,vmax=AMP_PSD_MAX)
+            ax[k].set_xlim(datetime.datetime(obspy.UTCDateTime(INITIAL_DATE).year,obspy.UTCDateTime(INITIAL_DATE).month,obspy.UTCDateTime(INITIAL_DATE).day),datetime.datetime(obspy.UTCDateTime(FINAL_DATE).year,obspy.UTCDateTime(FINAL_DATE).month,obspy.UTCDateTime(FINAL_DATE).day))
+            ax[k].yaxis.set_major_locator(MultipleLocator(4))
+            ax[k].yaxis.set_minor_locator(MultipleLocator(1))
+            ax[k].xaxis.set_major_locator(days5)
+            ax[k].xaxis.set_major_formatter(yearsFmt)
+            ax[k].xaxis.set_minor_locator(days1)
+            ax[k].tick_params(which='minor', length=4)
+            ax[k].tick_params(which='major', length=10)
+            ax[k].set_ylim(0,24)
+            ax[k].set_yticklabels([' ',' ', '1h', '5h', '9h', '13h', '17h', '21h',' ']) #y axis according to Brazil UTC-3
+            ax[k].set_ylabel(l,fontsize=15)
+            ax[k].grid(b=True, which='major', color='k', linestyle='-')
+            ax[k].grid(b=True, which='minor', color='k', linestyle='-')
+
+
+        plt.setp(ax[k].xaxis.get_majorticklabels(), fontsize=10, rotation=30)
+        if LABEL_LANG == 'br':
+            ax[-1].set_xlabel('Data', fontsize=20)
+
+        else:
+            ax[-1].set_xlabel('Time', fontsize=20)
+
+        #criando a localização da barra de cores:
+        axins = inset_axes(ax[0],
+                            width="10%",  # width = 10% of parent_bbox width
+                            height="5%",  # height : 50%
+                            loc='upper left',
+                            bbox_to_anchor=(0.85, 0.1, 1, 1),
+                            bbox_transform=ax[0].transAxes,
+                            borderpad=0,
+                           )
+        cbar = fig.colorbar(im, cax=axins, orientation="horizontal", ticklocation='top',ticks=[AMP_PSD_MIN,np.mean([AMP_PSD_MIN,AMP_PSD_MAX]),AMP_PSD_MAX],label='Amplitude '+r'$[m^2/s^4/Hz][dB]$')
+
+        os.makedirs(OUTPUT_FIGURE_DIR,exist_ok=True)
+        fig.savefig(OUTPUT_FIGURE_DIR+j+'_'+'PSD_BY_PERIOD_'+str(round(1/PERIOD_PSD,3))+'_'+str(obspy.UTCDateTime(INITIAL_DATE).year)+'_'+str(obspy.UTCDateTime(INITIAL_DATE).month)+'_'+str(obspy.UTCDateTime(INITIAL_DATE).day)+'_'+str(obspy.UTCDateTime(FINAL_DATE).year)+'_'+str(obspy.UTCDateTime(FINAL_DATE).month)+'_'+str(obspy.UTCDateTime(FINAL_DATE).day)+'.pdf',dpi=500)
 
 # ========================================
 # Ploting PPSD DATA BY PERIOD (HYDROPHONE)
@@ -414,7 +588,7 @@ def plot_PPSD_by_period_hydrophone(directory_data):
             lst_time = []
             for x,c in enumerate(flat_time_lst):
                 if c.hour == h:
-                    lst_time.append(ppsd.extract_psd_values(PERIOD_PSD)[0][x])
+                    lst_time.append(ppsd.extract_psd_values(round(1/PERIOD_PSD,3))[0][x])
             time_flat_time_lst[g] = lst_time
 
         AMPLITUDE_HOUR = [[]]*24
@@ -534,4 +708,4 @@ def plot_PPSD_by_period_hydrophone(directory_data):
         cbar = fig.colorbar(im, cax=axins, orientation="horizontal", ticklocation='top',ticks=[AMP_PSD_MIN,np.mean([AMP_PSD_MIN,AMP_PSD_MAX]),AMP_PSD_MAX],label='Amplitude '+r'$[m^2/s^4/Hz][dB]$')
 
         os.makedirs(OUTPUT_FIGURE_DIR,exist_ok=True)
-        fig.savefig(OUTPUT_FIGURE_DIR+j+'_'+'PSD_BY_PERIOD_HYDROPHONE'+str(PERIOD_PSD)+'_'+str(obspy.UTCDateTime(INITIAL_DATE).year)+'_'+str(obspy.UTCDateTime(INITIAL_DATE).month)+'_'+str(obspy.UTCDateTime(INITIAL_DATE).day)+'_'+str(obspy.UTCDateTime(FINAL_DATE).year)+'_'+str(obspy.UTCDateTime(FINAL_DATE).month)+'_'+str(obspy.UTCDateTime(FINAL_DATE).day)+'.pdf',dpi=500)
+        fig.savefig(OUTPUT_FIGURE_DIR+j+'_'+'PSD_BY_PERIOD_HYDROPHONE'+str(round(1/PERIOD_PSD,3))+'_'+str(obspy.UTCDateTime(INITIAL_DATE).year)+'_'+str(obspy.UTCDateTime(INITIAL_DATE).month)+'_'+str(obspy.UTCDateTime(INITIAL_DATE).day)+'_'+str(obspy.UTCDateTime(FINAL_DATE).year)+'_'+str(obspy.UTCDateTime(FINAL_DATE).month)+'_'+str(obspy.UTCDateTime(FINAL_DATE).day)+'.pdf',dpi=500)
