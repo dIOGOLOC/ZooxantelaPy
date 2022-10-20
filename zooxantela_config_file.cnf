@@ -108,8 +108,8 @@ TIME_OF_WEEKDAY_FINAL_HOUR = 24
 PERIOD_PSD = 8
 
 #Extracting PSD values for given bandpass (Hz).
-PERIOD_PSD_MIN = 7
-PERIOD_PSD_MAX = 9
+PERIOD_PSD_MIN = 20
+PERIOD_PSD_MAX = 30
 
 #Maximum and minimum amplitude of the PSD (sensor).
 AMP_PSD_MIN = -120

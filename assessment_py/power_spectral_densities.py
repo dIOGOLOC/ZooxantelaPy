@@ -337,7 +337,7 @@ def plot_PPSD_by_period_sensor(directory_data):
             ax[k].tick_params(which='minor', length=4)
             ax[k].tick_params(which='major', length=10)
             ax[k].set_ylim(0,24)
-            ax[k].set_yticklabels([' ',' ', '1h', '5h', '9h', '13h', '17h', '21h',' ']) #y axis according to Brazil UTC-3
+            #ax[k].set_yticklabels([' ',' ', '1h', '5h', '9h', '13h', '17h', '21h',' ']) #y axis according to Brazil UTC-3
             ax[k].set_ylabel(l,fontsize=15)
             ax[k].grid(b=True, which='major', color='k', linestyle='-')
             ax[k].grid(b=True, which='minor', color='k', linestyle='-')
@@ -391,6 +391,8 @@ def plot_PPSD_by_period_sensor_bandpass(directory_data):
         print("Extracting data from PPSD header.")
 
 
+    bandpass_lst = np.arange(PERIOD_PSD_MIN,PERIOD_PSD_MAX+1,1)
+    
     for j in tqdm(data_lista):
         #Reading header from data
         ppsd = PPSD.load_npz(j,allow_pickle=True)
@@ -411,13 +413,12 @@ def plot_PPSD_by_period_sensor_bandpass(directory_data):
         for g,h in enumerate(np.arange(24)):
             lst_time = []
             for x,c in enumerate(flat_time_lst):
-                if c.hour == h:
-                    print(round(1/PERIOD_PSD,3))
-                    psd_values, period_min, _, period_max = ppsd.extract_psd_values(round(1/PERIOD_PSD,3))
-                    label = "{:.2g}-{:.2g} [Hz]".format(1.0/period_max,1.0/period_min)
-                    print(label)
-                    #lst_time.append(ppsd.extract_psd_values(round(1/PERIOD_PSD,3))[0][x])
-                    lst_time.append(psd_values[x])
+                if (c+10800).hour == h:
+                    extract_psd_values_bandpass_lst = []
+                    for frequency_hz in bandpass_lst:
+                        psd_values, period_min, _, period_max = ppsd.extract_psd_values(round(1/frequency_hz,3))
+                        extract_psd_values_bandpass_lst.append(psd_values[x])
+                    lst_time.append(np.mean(extract_psd_values_bandpass_lst))
             time_flat_time_lst[g] = lst_time
 
         AMPLITUDE_HOUR = [[]]*24
@@ -431,7 +432,7 @@ def plot_PPSD_by_period_sensor_bandpass(directory_data):
 
 
     df = pd.concat(dataframe_lista, ignore_index=True)
-
+    
     #Sorting according to station
     station_lista = list(set(df['STATION']))
 
@@ -494,7 +495,7 @@ def plot_PPSD_by_period_sensor_bandpass(directory_data):
 
         #Matplotlib parameters
         fig, ax = plt.subplots(nrows=len(channel_lista), ncols=1,sharex=True,sharey=True,figsize=(40,15))
-        fig.suptitle(j,fontsize=25,y=0.9)
+        fig.suptitle(j+'(filter: '+str(PERIOD_PSD_MIN)+'-'+str(PERIOD_PSD_MAX)+' Hz)',fontsize=25,y=0.9)
         for k,l in enumerate(channel_lista):
 
             df_ch = df_sta[df_sta['CHANNEL'] == l]
@@ -511,18 +512,17 @@ def plot_PPSD_by_period_sensor_bandpass(directory_data):
             ax[k].tick_params(which='minor', length=4)
             ax[k].tick_params(which='major', length=10)
             ax[k].set_ylim(0,24)
-            ax[k].set_yticklabels([' ',' ', '1h', '5h', '9h', '13h', '17h', '21h',' ']) #y axis according to Brazil UTC-3
+            #ax[k].set_yticklabels([' ',' ', '1h', '5h', '9h', '13h', '17h', '21h',' ']) #y axis according to Brazil UTC-3
             ax[k].set_ylabel(l,fontsize=15)
             ax[k].grid(b=True, which='major', color='k', linestyle='-')
             ax[k].grid(b=True, which='minor', color='k', linestyle='-')
 
 
         plt.setp(ax[k].xaxis.get_majorticklabels(), fontsize=10, rotation=30)
-        if LABEL_LANG == 'br':
-            ax[-1].set_xlabel('Data', fontsize=20)
-
-        else:
-            ax[-1].set_xlabel('Time', fontsize=20)
+        #if LABEL_LANG == 'br':
+            #ax[-1].set_xlabel('Tempo', fontsize=20)
+        #else:
+           #ax[-1].set_xlabel('Time', fontsize=20)
 
         #criando a localização da barra de cores:
         axins = inset_axes(ax[0],
@@ -534,9 +534,9 @@ def plot_PPSD_by_period_sensor_bandpass(directory_data):
                             borderpad=0,
                            )
         cbar = fig.colorbar(im, cax=axins, orientation="horizontal", ticklocation='top',ticks=[AMP_PSD_MIN,np.mean([AMP_PSD_MIN,AMP_PSD_MAX]),AMP_PSD_MAX],label='Amplitude '+r'$[m^2/s^4/Hz][dB]$')
-
-        os.makedirs(OUTPUT_FIGURE_DIR,exist_ok=True)
-        fig.savefig(OUTPUT_FIGURE_DIR+j+'_'+'PSD_BY_PERIOD_'+str(round(1/PERIOD_PSD,3))+'_'+str(obspy.UTCDateTime(INITIAL_DATE).year)+'_'+str(obspy.UTCDateTime(INITIAL_DATE).month)+'_'+str(obspy.UTCDateTime(INITIAL_DATE).day)+'_'+str(obspy.UTCDateTime(FINAL_DATE).year)+'_'+str(obspy.UTCDateTime(FINAL_DATE).month)+'_'+str(obspy.UTCDateTime(FINAL_DATE).day)+'.pdf',dpi=500)
+        PPSD_output_folder = OUTPUT_FIGURE_DIR+'PPSD/BANDPASS_'+str(PERIOD_PSD_MIN)+'_'+str(PERIOD_PSD_MAX)+'_Hz/'
+        os.makedirs(PPSD_output_folder,exist_ok=True)
+        fig.savefig(PPSD_output_folder+j+'_'+'PSD_BY_PERIOD_BANDPASS_'+str(PERIOD_PSD_MIN)+'_'+str(PERIOD_PSD_MAX)+'_Hz_'+str(obspy.UTCDateTime(INITIAL_DATE).year)+'_'+str(obspy.UTCDateTime(INITIAL_DATE).month)+'_'+str(obspy.UTCDateTime(INITIAL_DATE).day)+'_'+str(obspy.UTCDateTime(FINAL_DATE).year)+'_'+str(obspy.UTCDateTime(FINAL_DATE).month)+'_'+str(obspy.UTCDateTime(FINAL_DATE).day)+'.pdf',dpi=500)
 
 # ========================================
 # Ploting PPSD DATA BY PERIOD (HYDROPHONE)
@@ -683,7 +683,7 @@ def plot_PPSD_by_period_hydrophone(directory_data):
         ax.tick_params(which='minor', length=4)
         ax.tick_params(which='major', length=10)
         ax.set_ylim(0,24)
-        ax.set_yticklabels([' ',' ', '1h', '5h', '9h', '13h', '17h', '21h',' ']) #y axis according to Brazil UTC-3
+        #ax.set_yticklabels([' ',' ', '1h', '5h', '9h', '13h', '17h', '21h',' ']) #y axis according to Brazil UTC-3
         ax.set_ylabel(channel_lista[0],fontsize=15)
         ax.grid(b=True, which='major', color='k', linestyle='-')
         ax.grid(b=True, which='minor', color='k', linestyle='-')
