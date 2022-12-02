@@ -5,5 +5,5 @@
 To instal ZooxantelaPy:
 
 ```console
-(.venv) $ pip install ZooxantelaPy
+    $ pip install ZooxantelaPy (*in future*)
 ```

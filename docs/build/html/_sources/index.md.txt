@@ -22,5 +22,6 @@ The code is still experimental (under heavy development) so you should regularly
 usage
 requirements
 todolist
-Inspiration
+inspiration
+references
 ```

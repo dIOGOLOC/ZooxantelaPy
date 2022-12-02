@@ -1,3 +1,4 @@
 # ToDo list
 
-- Create the main code.
+- Create the documentation in sphinx.
+- Create the figures to show each processing step.
