@@ -3,21 +3,24 @@
 % You can adapt this file completely to your liking, but it should at least
 % contain the root `toctree` directive.
 
-```{include} ../../READ.md
+```{include} ../../README.md
 :relative-images:
 ```
 
+For furthuer info, check out {doc}`usage`.
+Read installation instructions in {ref}`Installation`.
+
 ```{warning}
-This library is under heavy development. 
+The code is still experimental (under heavy development) so you should regularly check for (and pull) updates.
+
 ```
 
 ```{toctree}
 :caption: 'Contents:'
 :maxdepth: 2
+
+usage
+requirements
+todolist
+Inspiration
 ```
-
-# Indices and tables
-
-- {ref}`genindex`
-- {ref}`modindex`
-- {ref}`search`
