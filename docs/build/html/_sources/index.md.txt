@@ -7,8 +7,8 @@
 :relative-images:
 ```
 
-For furthuer info, check out {doc}`usage`.
-Read installation instructions in {ref}`Installation`.
+For further info, check out {doc}`usage`.
+Read installation instructions in {ref}`Installation` topic.
 
 ```{warning}
 The code is still experimental (under heavy development) so you should regularly check for (and pull) updates.
@@ -20,6 +20,7 @@ The code is still experimental (under heavy development) so you should regularly
 :maxdepth: 2
 
 usage
+notebooks/tutorial
 requirements
 todolist
 inspiration
