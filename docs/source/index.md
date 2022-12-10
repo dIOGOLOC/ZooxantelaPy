@@ -19,7 +19,9 @@ The code is still experimental (under heavy development) so you should regularly
 :caption: 'Contents:'
 :maxdepth: 2
 
+whatis
 usage
+fetching
 notebooks/tutorial
 requirements
 todolist
