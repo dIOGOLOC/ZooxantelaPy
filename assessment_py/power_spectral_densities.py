@@ -68,7 +68,27 @@ from parameters_py.config import (
 # Function to calculate PSD from file
 # ====================================
 
-def calc_PSD(file):
+def calc_PSD(file,XML_FILE=XML_FILE):
+
+    '''
+    Calculate the probabilistic power spectral densities for one trace (specific station/channel).
+    Useful for site quality control checks.
+    Calculations are based on https://docs.obspy.org/packages/autogen/obspy.signal.spectral_estimation.PPSD.html.
+    
+    For more information see McNamara, D. E. and Buland, R. P. (2004), Ambient Noise Levels in the Continental United States,Bulletin of the Seismological Society of America, 94 (4), 1517-1527.
+    
+    Returns a .npz file format (A simple format for saving numpy arrays to disk with the full information about them). 
+    See more in https://numpy.org/doc/stable/reference/generated/numpy.lib.format.html#module-numpy.lib.format.
+
+    :type file: str
+    :param file: file path to trace [MSEED file] (e.g. ``"~/STATION/CHANNEL.D/[MSEED FILE]"``). 
+    :type XML_FILE: str
+    :param XML_FILE: file path to STATIONXML file (e.g. ``"~/STATIONXML/***.XML"``). 
+        
+    :returns: binary zipped archive 
+    :rtype: binary file[npz]
+    '''
+
     st = obspy.read(file)
     l = st[0]
 
@@ -103,17 +123,30 @@ def calc_PSD(file):
 # Ploting TOTAL PPSD DATA (SENSOR)
 # ================================
 
-def plot_PSD(directory):
-	files = sorted(glob.glob(directory+'/*'))
+def plot_PSD(directory,INITIAL_DATE=INITIAL_DATE,FINAL_DATE=FINAL_DATE,TIME_OF_WEEKDAY_DAY=TIME_OF_WEEKDAY_DAY, TIME_OF_WEEKDAY_START_HOUR=TIME_OF_WEEKDAY_START_HOUR, TIME_OF_WEEKDAY_FINAL_HOUR=TIME_OF_WEEKDAY_FINAL_HOUR):
+    '''
+    Calculate 2D histogram stack with restrictions: starttime,endtime and time of day. 
+    See more information in https://docs.obspy.org/packages/autogen/obspy.signal.spectral_estimation.PPSD.calculate_histogram.html#obspy.signal.spectral_estimation.PPSD.calculate_histogram
 
-	ppsd = PPSD.load_npz(files[0])
+    Also plot the probabilistic power spectral densities.
 
-	[ppsd.add_npz(i) for i in files[1:]]
+    :type directory: str
+    :param directory: file path to .npz folder (e.g. ``"~/STATION/CHANNEL.PPSD/*[npz FILES]"``). 
+        
+    :returns: Figure with the plot.
+    :rtype: Output[PDF]
+    '''   
 
-	ppsd.calculate_histogram(starttime=UTCDateTime(INITIAL_DATE),endtime=UTCDateTime(FINAL_DATE),time_of_weekday=[(TIME_OF_WEEKDAY_DAY, TIME_OF_WEEKDAY_START_HOUR, TIME_OF_WEEKDAY_FINAL_HOUR)])
-	folder_output = OUTPUT_FIGURE_DIR+'WINDOWED_'+str(int(TIME_OF_WEEKDAY_START_HOUR))+'_'+str(int(TIME_OF_WEEKDAY_FINAL_HOUR))+'/'+ppsd.station+'/'
-	os.makedirs(folder_output,exist_ok=True)
-	ppsd.plot(cmap=pqlx,show_coverage=False,filename=folder_output+ppsd.network+'.'+ppsd.station+'.'+ppsd.channel+'.'+str(ppsd.times_processed[0].year)+'.pdf')
+    files = sorted(glob.glob(directory+'/*'))
+
+    ppsd = PPSD.load_npz(files[0])
+
+    [ppsd.add_npz(i) for i in files[1:]]
+
+    ppsd.calculate_histogram(starttime=UTCDateTime(INITIAL_DATE),endtime=UTCDateTime(FINAL_DATE),time_of_weekday=[(TIME_OF_WEEKDAY_DAY, TIME_OF_WEEKDAY_START_HOUR, TIME_OF_WEEKDAY_FINAL_HOUR)])
+    folder_output = OUTPUT_FIGURE_DIR+'WINDOWED_'+str(int(TIME_OF_WEEKDAY_START_HOUR))+'_'+str(int(TIME_OF_WEEKDAY_FINAL_HOUR))+'/'+ppsd.station+'/'
+    os.makedirs(folder_output,exist_ok=True)
+    ppsd.plot(cmap=pqlx,show_coverage=False,filename=folder_output+ppsd.network+'.'+ppsd.station+'.'+ppsd.channel+'.'+str(ppsd.times_processed[0].year)+'.pdf')
 
 # =====================================
 # Ploting TOTAL PPSD DATA (HYDROPHONE)

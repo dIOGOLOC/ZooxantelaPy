@@ -56,7 +56,19 @@ from parameters_py.config import (
 # Function to store data in dic
 # ==============================
 
-def plot_date_file(FIG_FOLDER_OUTPUT,directory_data,XML_FILE):
+def plot_date_file(FIG_FOLDER_OUTPUT,directory_data):
+    """
+    Given a MSEED folder, this function returns a plot with the data completeness according to the header of each file. 
+    Default plot includes an colorplot of a 2-D array. 
+ 
+    :type FIG_FOLDER_OUTPUT: str
+    :param FIG_FOLDER_OUTPUT: Output file path to directly save the resulting image (e.g. ``"/tmp/figures/"``). 
+    :type directory_data: str
+    :param directory_data: Station folder path (e.g. ``"~/NETWORK/*STATION*/CHANNEL.D/"``).    
+    
+    :returns: Figure with the plot.
+    :rtype: Output[PDF]
+    """
 
     data_lista = []
     if LABEL_LANG == 'br':
@@ -228,73 +240,8 @@ def plot_date_file(FIG_FOLDER_OUTPUT,directory_data,XML_FILE):
 
         os.makedirs(FIG_FOLDER_OUTPUT,exist_ok=True)
         fig.savefig(FIG_FOLDER_OUTPUT+j+'_'+'COMPLETENESS_'+str(obspy.UTCDateTime(INITIAL_DATE).year)+'_'+str(obspy.UTCDateTime(INITIAL_DATE).month)+'_'+str(obspy.UTCDateTime(INITIAL_DATE).day)+'_'+str(obspy.UTCDateTime(FINAL_DATE).year)+'_'+str(obspy.UTCDateTime(FINAL_DATE).month)+'_'+str(obspy.UTCDateTime(FINAL_DATE).day)+'.pdf',dpi=500)
-        #plt.show()
 
 def get_date_file_via_client(FIG_FOLDER_OUTPUT,STATION_NAME):
- 
-    """
-    plot(self, kind=[['ortho', 'beachball'], ['p_sphere', 's_sphere']],
-             subplot_size=4.0, show=True, outfile=None, **kwargs):
-        Plot event location and/or the preferred focal mechanism
-        and radiation pattern.
-        :type kind: list[str] or list[list[str]]
-        :param kind: A list of strings (for a 1-row plot) or a nested list of
-            strings (one list of strings per row), with the following keywords
-            to generate a matplotlib figure:
-            * ``'ortho'`` (Orthographic plot of event location
-              see :meth:`~obspy.core.event.catalog.Catalog.plot`)
-            * ``'global'`` (Global plot of event location
-              see :meth:`~obspy.core.event.catalog.Catalog.plot`)
-            * ``'local'`` (Local plot of event location
-              see :meth:`~obspy.core.event.catalog.Catalog.plot`)
-            * ``'beachball'`` (Beachball of preferred focal mechanism)
-            * ``'p_quiver'`` (quiver plot of p wave farfield)
-            * ``'s_quiver'`` (quiver plot of s wave farfield)
-            * ``'p_sphere'`` (surface plot of p wave farfield)
-            * ``'s_sphere'`` (surface plot of s wave farfield)
-        :type subplot_size: float
-        :param subplot_size: Width/height of one single subplot cell in inches.
-        :type show: bool
-        :param show: Whether to show the figure after plotting or not. Can be
-            used to do further customization of the plot before
-            showing it. Has no effect if `outfile` is specified.
-        :type outfile: str
-        :param outfile: Output file path to directly save the resulting image
-            (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
-            will not be displayed interactively. The given path/filename is
-            also used to automatically determine the output format. Supported
-            file formats depend on your matplotlib backend.  Most backends
-            support png, pdf, ps, eps and svg. Defaults to ``None``.
-            The figure is closed after saving it to file.
-        :returns: Figure instance with the plot.
-        .. rubric:: Examples
-        Default plot includes an orthographic map plot, a beachball plot and
-        plots of P/S farfield radiation patterns (preferred -- or first --
-        focal mechanism has to have a moment tensor set).
-        >>> from obspy import read_events
-        >>> event = read_events("/path/to/CMTSOLUTION")[0]
-        >>> event.plot()  # doctest:+SKIP
-        .. plot::
-            from obspy import read_events
-            event = read_events("/path/to/CMTSOLUTION")[0]
-            event.plot()
-        Individual subplot parts and the setup of the grid of subplots
-        (rows/columns) can be specified by using certain keywords, see `kind`
-        parameter description.
-        >>> event.plot(kind=[['global'],
-        ...                  ['p_sphere', 'p_quiver']])  # doctest:+SKIP
-        .. plot::
-            from obspy import read_events
-            event = read_events("/path/to/CMTSOLUTION")[0]
-            event.plot(kind=[['global'], ['p_sphere', 'p_quiver']])
-    """
-
-
-
-
-
-
-
 
     #Conectando ao arclink
     client = Client(user=USER,host=HOST, port=PORT, institution=INSTITUTION)
@@ -457,4 +404,3 @@ def get_date_file_via_client(FIG_FOLDER_OUTPUT,STATION_NAME):
     cbar.ax.set_xticklabels(['0%','50%','100%'])
     os.makedirs(FIG_FOLDER_OUTPUT,exist_ok=True)
     fig.savefig(FIG_FOLDER_OUTPUT+time_dic['network']+'_'+time_dic['station']+'_'+time_dic['channel']+'_'+'COMPLETENESS.pdf',dpi=300)
-    plt.show()

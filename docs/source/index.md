@@ -24,6 +24,7 @@ usage
 fetching
 notebooks/tutorial
 requirements
+usefulfunction
 todolist
 inspiration
 references

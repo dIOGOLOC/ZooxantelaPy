@@ -155,7 +155,22 @@ def ftest(res1, pars1, res2, pars2):
 #-------------------------------------------------------------------------------
 
 def Admittance_xy(G_xy,G_xx,G_yy,wind_number):
-
+    '''
+    Estimate admittance and admittance error.
+    
+    Admittance is the amplitude or gain factor of the transfer function between x(t) and y(t). 
+    
+    :type G_xy: numpy.array
+    :param G_xy: cross-spectral density function between x(t) and y(t). 
+    :type G_xx: numpy.array
+    :param G_xx: cross-spectral density function between x(t) and x(t). 
+    :type G_yy: numpy.array
+    :param G_yy: cross-spectral density function between y(t) and y(t). 
+    :type wind_number: float
+    :param wind_number: number of subrecords.       
+    :returns: Admittance,Admittance error
+    :rtype: tuple of values
+    '''
     A_xy = abs(G_xy)/G_xx
 
     Error_A_xy = np.sqrt(1 - (np.abs(G_xy)**2)/(G_xx*G_yy))/np.sqrt(2*wind_number)*abs(np.sqrt((np.abs(G_xy)**2)/(G_xx*G_yy)))
@@ -165,6 +180,24 @@ def Admittance_xy(G_xy,G_xx,G_yy,wind_number):
 #-------------------------------------------------------------------------------
 
 def Coherence_xy(G_xy,G_xx,G_yy,wind_number):
+    '''
+    Estimate Coherence and Coherence error.
+
+    Coherence describes the degree to which x(t) matches y(t) at the specified frequency.
+    it is the square of the correlation coefficient and represents the fraction of the power of y(t) that can be predicted linearly from x(t).
+
+    
+    :type G_xy: numpy.array
+    :param G_xy: cross-spectral density function between x(t) and y(t). 
+    :type G_xx: numpy.array
+    :param G_xx: cross-spectral density function between x(t) and x(t). 
+    :type G_yy: numpy.array
+    :param G_yy: cross-spectral density function between y(t) and y(t). 
+    :type wind_number: float
+    :param wind_number: number of subrecords.       
+    :returns: Coherence,Coherence error
+    :rtype: tuple of values
+    '''
 
     Gama2_xy = (np.abs(G_xy)**2)/(G_xx*G_yy)
 
@@ -175,11 +208,28 @@ def Coherence_xy(G_xy,G_xx,G_yy,wind_number):
 #-------------------------------------------------------------------------------
 
 def Phase_xy(Q_xy,C_xy,G_xy,G_xx,G_yy,wind_number):
+    '''
+    The phase function gives the phase shift between x(t) and y(t) as a function of frequency.
 
+    :type Q_xy: numpy.array
+    :param Q_xy: cross-spectral density function between x(t) and y(t), after breaking X and Y into real and imaginary portions. 
+    :type C_xy: numpy.array
+    :param C_xy: cross-spectral density function between x(t) and y(t), after breaking X and Y into real and imaginary portions.  
+    :type G_xy: numpy.array
+    :param G_xy: cross-spectral density function between x(t) and y(t). 
+    :type G_xx: numpy.array
+    :param G_xx: cross-spectral density function between x(t) and x(t). 
+    :type G_yy: numpy.array
+    :param G_yy: cross-spectral density function between y(t) and y(t). 
+    :type wind_number: float
+    :param wind_number: number of subrecords.       
+    :returns: Coherence,Coherence error
+    :rtype: tuple of values
+
+    '''
     Phase_xy = np.arctan2(Q_xy,C_xy)
 
     Error_phase_xy = np.sqrt(1 - (np.abs(G_xy)**2)/(G_xx*G_yy))/np.sqrt(2*wind_number)*abs(np.sqrt((np.abs(G_xy)**2)/(G_xx*G_yy)))
-
 
     return Phase_xy,Error_phase_xy
 

@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Inspiration" href="inspiration.html" /><link rel="prev" title="Useful functions" href="usefulfunction.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Tutorial" href="notebooks/tutorial.html" /><link rel="prev" title="Usage" href="usage.html" />
 
     <meta name="generator" content="sphinx-4.5.0, furo 2022.09.29"/>
-        <title>ToDo list - ZooxantelaPy 0.1 documentation</title>
+        <title>Fetching OBS data - ZooxantelaPy 0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=d81277517bee4d6b0349d71bb2661d4890b5617c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -134,7 +134,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -158,11 +158,11 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="whatis.html">What is ZooxantelaPy ?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="fetching.html">Fetching OBS data</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Fetching OBS data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usefulfunction.html">Useful functions</a></li>
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">ToDo list</a></li>
+<li class="toctree-l1"><a class="reference internal" href="todolist.html">ToDo list</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inspiration.html">Inspiration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
 </ul>
@@ -193,24 +193,18 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main">
-          <section class="tex2jax_ignore mathjax_ignore" id="todo-list">
-<h1>ToDo list<a class="headerlink" href="#todo-list" title="Permalink to this headline">#</a></h1>
-<section id="next-steps">
-<h2>Next steps:<a class="headerlink" href="#next-steps" title="Permalink to this headline">#</a></h2>
-<ul class="contains-task-list simple">
-<li class="task-list-item"><p><input class="task-list-item-checkbox" checked="checked" disabled="disabled" type="checkbox"> Create the documentation in sphinx.</p></li>
-<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> Create the figures to show each processing step.</p></li>
-<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> Update the requirements.in file.</p></li>
-<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> …</p></li>
-<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> When all tasks are complete</p></li>
-</ul>
-</section>
+          <section class="tex2jax_ignore mathjax_ignore" id="fetching-obs-data">
+<h1>Fetching OBS data<a class="headerlink" href="#fetching-obs-data" title="Permalink to this headline">#</a></h1>
+<p><em>MiniSEED</em> is a stripped down version of SEED containing only waveform data. There is no station and channel metadata included In particular, such as geographic coordinates, response/scale and other useful information for interpreting data values.
+Time series are values independently fixed length data, each containing a small segment of length values.</p>
+<p>A <em>MiniSEED</em> reader is necessary to reconstruct the time series, in this case use <a class="reference external" href="https://docs.obspy.org/">OBSPY</a> to read the files generated by the <a class="reference external" href="https://www.guralp.com/sw/gcf2msd.shtml">GCF2MSD</a> program from Guralp. A <em>MiniSEED</em> “File” or “Stream” is simply a concatenation of data records. The OBS data were organized according to how the data from the Brazilian Seismographic Network <a class="reference external" href="http://rsbr.gov.br/">RSBR</a>. The dataset is divided according to the sensor components, where each folder contains 1-day-sized files that have already been preprocessed.</p>
+<p><em>StationXML</em> is an XML representation of metadata that describes the data collected by geophysical instrumentation. StationXML was developed through the International Federation of Digital Seismograph Networks (FDSN) to provide a standardized format for geophysical metadata.</p>
 </section>
 
         </article>
@@ -218,23 +212,23 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="inspiration.html">
+          <a class="next-page" href="notebooks/tutorial.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Inspiration</div>
+                <div class="title">Tutorial</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="usefulfunction.html">
+          <a class="prev-page" href="usage.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Useful functions</div>
+                <div class="title">Usage</div>
                 
               </div>
             </a>
@@ -258,27 +252,8 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer">
+    <aside class="toc-drawer no-toc">
       
-      
-      <div class="toc-sticky toc-scroll">
-        <div class="toc-title-container">
-          <span class="toc-title">
-            On this page
-          </span>
-        </div>
-        <div class="toc-tree-container">
-          <div class="toc-tree">
-            <ul>
-<li><a class="reference internal" href="#">ToDo list</a><ul>
-<li><a class="reference internal" href="#next-steps">Next steps:</a></li>
-</ul>
-</li>
-</ul>
-
-          </div>
-        </div>
-      </div>
       
       
     </aside>
