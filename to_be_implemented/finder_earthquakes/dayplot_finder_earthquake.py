@@ -102,7 +102,6 @@ INTERVAL_PERIOD_DATE = [str(x.year)+'.'+"%03d" % x.julday for x in INTERVAL_PERI
 # Functions
 # =========
 
-
 def filelist(basedir,interval_period_date):
     """
     Returns the list of files in *basedir* whose are in the specified period
