@@ -52,6 +52,7 @@ Examples of Usage (in command line):
 import numpy as np
 import os
 import json
+import sys
 
 from parameters_py.config import (
 					OUTPUT_JSON_FILE_DIR,STA_CSV_FILE,LABEL_LANG

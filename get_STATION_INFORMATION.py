@@ -50,4 +50,4 @@ Examples of Usage (in command line):
 import sys
 import os
 
-from get_information_py.get_station_information  import get_station_information
+from get_information_py  import get_station_information

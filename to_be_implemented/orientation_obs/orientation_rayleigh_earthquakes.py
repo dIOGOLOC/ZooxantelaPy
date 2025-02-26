@@ -18,7 +18,7 @@ import matplotlib.gridspec as gridspec
 
 import obspy as op
 from obspy import read,read_inventory, UTCDateTime, Stream, Trace
-from obspy.clients.fdsn import Client
+from obspy.clients.fdsn.client import Client
 from obspy.signal.rotate import rotate_ne_rt
 
 import json
@@ -155,21 +155,12 @@ print('\n')
 
 start_time = time.time()
 
-cat = Client.get_events(starttime=fday, endtime=lday, minmagnitude=6,catalog="ISC")
+client = Client('IRIS')
 
-print(cat)
+cat = client.get_events(starttime=fday, endtime=lday, minmagnitude=6.5)
 
-
+print(cat[0].resource_id.eventid)
 '''
-
-files1 = filelist(basedir=EVENT_DIR)
-
-files_final_1 = []
-for i in files1:
-        files_final_1.append([i for sta in OBS_LST if sta in i])
-
-files_final = [item for sublist in files_final_1 for item in sublist]
-
 print('\n')
 print("--- %.2f execution time (min) ---" % ((time.time() - start_time)/60))
 print('\n')
@@ -185,25 +176,18 @@ CC_MIN = 0.4
 
 for iOBS in OBS_LST:
 
-    # -----------------------------
-    #  Collecting OBS events files
-    # -----------------------------
-
-    files_at_OBS = list(filter(lambda x: iOBS in x, files_final))
-    # -----------------------------
+    # ---------------------------
+    # Retrieving events waveforms
+    # ---------------------------
 
     HHZ_lst = []
     HHE_lst = []
     HHN_lst = []
 
-    for i in files_at_OBS:
+    for i in cat:
         # ---------------------
         # Separating by channel
         # ---------------------
-
-        # splitting subdir/basename
-        subdir, filename = os.path.split(i)
-        nameslst = filename.split(iOBS+'.')[1]
 
         event_name = nameslst[:-2]
         channel_obs = nameslst.split('.')[-1]

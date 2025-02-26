@@ -44,12 +44,12 @@ import matplotlib as mpl
 import datetime
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 from obspy.signal import PPSD
-from obspy.clients.arclink.client import Client
+from obspy.clients.fdsn import Client
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 
 from parameters_py.config import (
-					OUTPUT_FIGURE_DIR,DIR_DATA,XML_FILE,INITIAL_DATE,FINAL_DATE,USER,HOST,PORT,INSTITUTION,LABEL_LANG
+					OUTPUT_FIGURE_DIR,DIR_DATA,XML_FILE,INITIAL_DATE,FINAL_DATE,LABEL_LANG
 				   )
 
 # ==============================
@@ -215,8 +215,8 @@ def plot_date_file(FIG_FOLDER_OUTPUT,directory_data):
             ax[k].tick_params(which='major', length=10)
             ax[k].set_ylim(0,24)
             ax[k].set_ylabel(l,fontsize=15)
-            ax[k].grid(b=True, which='major', color='k', linestyle='-')
-            ax[k].grid(b=True, which='minor', color='k', linestyle='-')
+            ax[k].grid(which='major', color='k', linestyle='-')
+            ax[k].grid(which='minor', color='k', linestyle='-')
 
 
         plt.setp(ax[k].xaxis.get_majorticklabels(), fontsize=10, rotation=30)
@@ -244,7 +244,7 @@ def plot_date_file(FIG_FOLDER_OUTPUT,directory_data):
 def get_date_file_via_client(FIG_FOLDER_OUTPUT,STATION_NAME):
 
     #Conectando ao arclink
-    client = Client(user=USER,host=HOST, port=PORT, institution=INSTITUTION)
+    client = Client(host=HOST, port=PORT)
 
     #Crio a lista com dias de acordo tempo inicial e final
     data_lista = np.arange(obspy.UTCDateTime(INITIAL_DATE),obspy.UTCDateTime(FINAL_DATE),86400)
@@ -386,8 +386,8 @@ def get_date_file_via_client(FIG_FOLDER_OUTPUT,STATION_NAME):
         ax.set_ylabel('Hour')
         ax.set_xlabel('Time')
 
-    ax.grid(b=True, which='major', color='k', linestyle='-')
-    ax.grid(b=True, which='minor', color='k', linestyle='-')
+    ax.grid(which='major', color='k', linestyle='-')
+    ax.grid(which='minor', color='k', linestyle='-')
     plt.setp(ax.xaxis.get_majorticklabels(), fontsize=10, rotation=30)
     ax.set_title(time_dic['network']+'.'+time_dic['station']+'.'+time_dic['channel'], fontsize=20   ,y=1.05)
 

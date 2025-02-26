@@ -331,16 +331,16 @@ HHN_dir = []
 HHX_dir = []
 
 for station in STATIONS:
-	for root, dirs, files in os.walk(OUTPUT_PSD_DIR+station+'/'):
-	    for directory in dirs:
-	        if "HHZ.PPSD" in directory:
-	            HHZ_dir.append(os.path.join(root, directory))
-	        if "HHE.PPSD" in directory:
-	        	HHE_dir.append(os.path.join(root, directory))
-	        if "HHN.PPSD" in directory:
-	          	HHN_dir.append(os.path.join(root, directory))
-	        if "HHX.PPSD" in directory:
-	            HHX_dir.append(os.path.join(root, directory))
+    for root, dirs, files in os.walk(OUTPUT_PSD_DIR+station+'/'):
+        for directory in dirs:
+            if "HHZ.PPSD" in directory:
+                HHZ_dir.append(os.path.join(root, directory))
+            if "HHE.PPSD" in directory:
+                HHE_dir.append(os.path.join(root, directory))
+            if "HHN.PPSD" in directory:
+                HHN_dir.append(os.path.join(root, directory))
+            if "HHX.PPSD" in directory:
+                HHX_dir.append(os.path.join(root, directory))
 
 # =================
 # Filtering by date

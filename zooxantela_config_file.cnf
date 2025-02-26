@@ -39,57 +39,54 @@
 #======
 
 #choose between portuguese (br) or english (en):
-LABEL_LANG = en
+LABEL_LANG = br
 
 #======
 [paths]
 #======
 
 # directory of raw files
-#DIR_DATA = /home/diogoloc/dados_posdoc/ON_MAR/RSBR_OBS_DATA/
-#DIR_DATA = /run/user/1000/gvfs/smb-share:server=hatabackup.local,share=dados_posdoc/ON_MAR/data/
-DIR_DATA = /home/diogoloc/dados_posdoc/ON_MAR/obs_data_MSEED/
+DIR_DATA = /home/sysop/dados_posdoc/PROJETO_ILHAS_OCEANICAS/DATA/
 
 # directory of raw status files
-DIR_STATUS = /home/diogoloc/dados_posdoc/ON_MAR/obs_data/STATUS_FILE/
+DIR_STATUS = /home/sysop/dados_posdoc/PROJETO_ILHAS_OCEANICAS/STATUS_FILE/
 
 #Directory to save JSON Files
-OUTPUT_JSON_FILE_DIR = /home/diogoloc/dados_posdoc/ON_MAR/JSON_FILES/
+OUTPUT_JSON_FILE_DIR = /home/sysop/dados_posdoc/PROJETO_ILHAS_OCEANICAS/JSON_FILES/
 
 #Directory to save Figures
-OUTPUT_FIGURE_DIR = /home/diogoloc/dados_posdoc/ON_MAR/Figuras/
+OUTPUT_FIGURE_DIR = /home/sysop/dados_posdoc/PROJETO_ILHAS_OCEANICAS/Figuras/
 
 #Directory to save PSD
-OUTPUT_PSD_DIR = /home/diogoloc/dados_posdoc/ON_MAR/obs_data_PSD_MSD/
+OUTPUT_PSD_DIR = /home/sysop/dados_posdoc/PROJETO_ILHAS_OCEANICAS/obs_data_PSD_MSD/
 
 #Directory to save EVENT data
-OUTPUT_EV_DIR = /home/diogoloc/dados_posdoc/ON_MAR/EVENTS/
+OUTPUT_EV_DIR = /home/sysop/dados_posdoc/PROJETO_ILHAS_OCEANICAS/EVENTS/
 
 #XML File
-XML_FILE = /home/diogoloc/dados_posdoc/ON_MAR/XML_ON_OBS_CC/
+XML_FILE = /home/sysop/dados_posdoc/PROJETO_ILHAS_OCEANICAS/XML_ON/
 
 #STA CSV FILE path
-STA_CSV_FILE  = /home/diogoloc/dados_posdoc/ON_MAR/STA_COORD/OBS/OBS_RSBR_ZOOXANTELA.txt
-#STA_CSV_FILE  = /home/diogoloc/dados_posdoc/ON_MAR/STA_COORD/OBS/OBS_ZOOXANTELA.txt
+STA_CSV_FILE  = /home/sysop/dados_posdoc/PROJETO_ILHAS_OCEANICAS/STA_COORD/ilhas_rsis.txt
 
 #Local events FILE path
-LOCAL_CSV_FILE  = /home/diogoloc/dados_posdoc/SIG_Dados/Projeto_ON_MAR/brasil_terremoto_lista_USP/sisbra_v2022Jan27/catalogo_07_2019_to_07_2020.csv
+LOCAL_CSV_FILE  = /home/sysop/dados_posdoc/SIG_Dados/Projeto_ON_MAR/brasil_terremoto_lista_USP/sisbra_v2022Jan27/catalogo_07_2019_to_07_2020.csv
 
 #Shapefile  boundary states
-BOUNDARY_STATES_SHP = /home/diogoloc/dados_posdoc/SIG_Dados/Projeto_ON_MAR/shapefile/brasil_estados/brasil_estados.shp
+BOUNDARY_STATES_SHP = /home/sysop/dados_posdoc/SIG_Dados/Projeto_ON_MAR/shapefile/brasil_estados/brasil_estados.shp
 
 #=====
 [ppsd]
 #=====
 
 #Number worker processes
-NUM_PROCESS = 8
+NUM_PROCESS = 10
 
 #PPSD start date
-INITIAL_DATE = 2019,6,1
+INITIAL_DATE = 2015,1,1
 
 #PPSD final date
-FINAL_DATE = 2020,8,1
+FINAL_DATE = 2024,12,31
 
 #Percentage fo the days to process and plot the PPSD?
 DAY_PERCENTAGE = 2
@@ -105,11 +102,11 @@ TIME_OF_WEEKDAY_FINAL_HOUR = 24
 
 #Extracting PSD values for given period (Hz).
 #Selects the period bin whose center period is closest to the specified period.
-PERIOD_PSD = 8
+PERIOD_PSD = 1
 
 #Extracting PSD values for given bandpass (Hz).
-PERIOD_PSD_MIN = 20
-PERIOD_PSD_MAX = 30
+PERIOD_PSD_MIN = 0.5
+PERIOD_PSD_MAX = 50
 
 #Maximum and minimum amplitude of the PSD (sensor).
 AMP_PSD_MIN = -120
@@ -136,8 +133,7 @@ LOCAL_EV_MAGNITUDE_MIN = 0
 LOCAL_EV_DISTANCE_MIN = 500
 
 #Shapefile to filter local event data
-#SHP_AREA_DELIMITER = /home/diogoloc/SIG_dados/Projeto_ON_MAR/shapefile/area_batimetria/area_mar.shp
-SHP_AREA_DELIMITER = /home/diogoloc/dados_posdoc/SIG_Dados/Projeto_ON_MAR/shapefile/area_batimetria/area_ON_projeto.shp
+SHP_AREA_DELIMITER = /home/sysop/dados_posdoc/SIG_Dados/Projeto_ON_MAR/shapefile/area_batimetria/area_ON_projeto.shp
 
 #Time to trim the seismogram before P-wave arrival
 CUT_BEFORE_P_LOCAL = 10
